@@ -1,0 +1,7 @@
+{
+  "name": "MemeMaster AI - הממים של החבר'ה",
+  "description": "משחק מסיבות ליצירת ממים בזמן אמת עם שיפוט בינה מלאכותית ציני ומשעשע",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
