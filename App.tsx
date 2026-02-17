@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GameState, GamePhase, Player, JudgePersonality, MemeSubmission, AIJudgmentResult } from './types';
 import { Lobby } from './components/Lobby';
-import { UploadPhase } from './components/GamePhase/UploadPhase';
+import UploadPhase from './components/GamePhase/UploadPhase';
 import { CaptioningPhase } from './components/GamePhase/CaptioningPhase';
 import { JudgingPhase } from './components/GamePhase/JudgingPhase';
 import { ResultsPhase } from './components/GamePhase/ResultsPhase';
