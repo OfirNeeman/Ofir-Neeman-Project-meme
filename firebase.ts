@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAX...", // המפתח שלך
+  apiKey: "AIzaSyAX...", // השאירי את המפתח המקורי שלך כאן
   authDomain: "mememaster-99e48.firebaseapp.com",
   projectId: "mememaster-99e48",
   messagingSenderId: "42101581710",
@@ -11,4 +11,3 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
-// מחקנו את ה-Storage מכאן
