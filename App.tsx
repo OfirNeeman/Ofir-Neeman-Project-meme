@@ -130,7 +130,7 @@ const App: React.FC = () => {
         )}
         
         {gameState.phase === GamePhase.UPLOAD && (
-          <UploadPhase onImageSelected={handleImageSelected} isHost={gameState.isHost} />
+          <UploadPhase onUploadComplete={handleImageSelected} isHost={gameState.isHost} />
         )}
         
         {gameState.phase === GamePhase.CAPTIONING && gameState.currentImageBase64 && (
