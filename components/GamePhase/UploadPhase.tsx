@@ -66,7 +66,7 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost }) =
             המשתתפים מעלים עכשיו תמונות… המתן לבחירה שלהם.
           </p>
           <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-md transition-all">
-           תחכה למשתתפים להעלות תמונות
+           התחל שלב הבא! 🚀
           </button>
         </>
       ) : (

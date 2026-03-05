@@ -181,7 +181,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
           </div>
         </div>
         <div className="w-full md:w-96 space-y-6">
-          <Button onClick={handleStart} size="xl" className="w-full" disabled={players.length < MIN_PLAYERS}>התחל משחק 🚀</Button>
+          <Button onClick={handleStart} size="xl" className="w-full" disabled={players.length < MIN_PLAYERS}>העלו תמונות</Button>
           <div className="text-center pt-2">
             <button onClick={() => setMode('MENU')} className="text-zinc-500 hover:text-white font-bold text-sm uppercase tracking-widest transition-colors">
                ביטול ויציאה
