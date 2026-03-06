@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 interface UploadPhaseProps {
   onUploadComplete: (imageUrl: string) => void;
   isHost: boolean;
+  onStartGame: () => void
 }
 
-const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost }) => {
+const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onStartGame }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -33,6 +35,7 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost }) =
         
         console.log("הסוקט סיים (או לפחות שלח)");
         setUploadStatus('success');
+        setSelectedImage(base64String);
         
         // רק עכשיו עוברים לשלב הבא במשחק
         setTimeout(() => {
@@ -44,12 +47,21 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost }) =
         setUploadStatus('error');
         // אם את רוצה שהמשחק ימשיך גם כשזה נכשל:
         // onUploadComplete(base64String); 
+        setSelectedImage(base64String);
       }
     };
 
     reader.readAsDataURL(file);
   };
 
+  const handleHostStart = () => {
+      if (selectedImage) {
+        onUploadComplete(selectedImage);
+      } else {
+        alert("עדיין לא הועלתה תמונה!");
+      }
+    };
+    
   return (
     <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-lg border-2 border-purple-200">
       <div className="text-sm text-gray-500 mb-2">
@@ -65,7 +77,10 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost }) =
           <p className="mb-6 text-gray-600 text-center">
             המשתתפים מעלים עכשיו תמונות… המתן לבחירה שלהם.
           </p>
-          <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-md transition-all">
+          <button 
+            onClick={onStartGame} // חיבור הלחיצה למעבר השלב
+            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-md transition-all"
+          >
            התחל שלב הבא! 🚀
           </button>
         </>

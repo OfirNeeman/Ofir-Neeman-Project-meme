@@ -39,8 +39,11 @@ const App: React.FC = () => {
     setGameState(prev => ({
       ...prev,
       currentImageBase64: base64,
-      phase: GamePhase.CAPTIONING
     }));
+  };
+
+  const handleStartCaptioning = () => {
+  updatePhase(GamePhase.CAPTIONING);
   };
 
   const handleSubmitCaptions = async (submissions: MemeSubmission[]) => {
@@ -130,7 +133,11 @@ const App: React.FC = () => {
         )}
         
         {gameState.phase === GamePhase.UPLOAD && (
-          <UploadPhase onUploadComplete={handleImageSelected} isHost={gameState.isHost} />
+          <UploadPhase 
+            onUploadComplete={handleImageSelected} 
+            isHost={gameState.isHost}
+            onStartGame={handleStartCaptioning} // העבר פונקציה למעבר שלב
+          />
         )}
         
         {gameState.phase === GamePhase.CAPTIONING && gameState.currentImageBase64 && (

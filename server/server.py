@@ -43,47 +43,37 @@ def fetch_random_gifs(limit=5):
             
 
 def handle_client(client_socket, addr):
+    print(f"[*] התקבל חיבור מכתובת: {addr}")
     try:
-        raw_data = client_socket.recv(4096)
-        if not raw_data:
-            return
+        # קריאת הבקשה
+        request = client_socket.recv(4096)
+        
+        # שמירת הקובץ (הלוגיקה הקיימת שלך)
+        filename = f"{UPLOADS_DIR}/image_{addr[1]}.jpg"
+        with open(filename, "wb") as f:
+            f.write(request.split(b'\r\n\r\n')[-1])
+            while True:
+                client_socket.settimeout(1.0) # הוספת timeout כדי לא להיתקע
+                try:
+                    data = client_socket.recv(4096)
+                    if not data: break
+                    f.write(data)
+                except socket.timeout:
+                    break
+        
+        print(f"[V] הקובץ נשמר בהצלחה: {filename}")
 
-        # ננסה לפענח כטקסט כדי לראות אם זו בקשת GET/POST של המארח
-        try:
-            request_text = raw_data.decode('utf-8')
-            is_request = "GET" in request_text or "POST" in request_text
-        except UnicodeDecodeError:
-            is_request = False
-
-        if is_request:
-            # המארח מבקש לבחור תמונה רנדומלית
-            all_files = [f for f in os.listdir(UPLOADS_DIR) if f.endswith(('.gif', '.jpg', '.jpeg', '.png'))]
-            chosen_image = random.choice(all_files) if all_files else "default.jpg"
-            
-            response = "HTTP/1.1 200 OK\r\n"
-            response += "Content-Type: text/plain\r\n"
-            response += "Access-Control-Allow-Origin: *\r\n"
-            response += "\r\n"
-            response += chosen_image
-            client_socket.sendall(response.encode())
-            print(f"[*] Sent random image to host: {chosen_image}")
-        else:
-            # אם זה לא טקסט קריא, זו כנראה תמונה שנשלחת משחקן
-            filename = f"{UPLOADS_DIR}/image_{addr[1]}.jpg"
-            with open(filename, "wb") as f:
-                f.write(raw_data)
-                while True:
-                    client_socket.settimeout(1.0)
-                    try:
-                        data = client_socket.recv(4096)
-                        if not data: break
-                        f.write(data)
-                    except socket.timeout:
-                        break
-            print(f"[V] Saved player image: {filename}")
+        # --- התיקון: שליחת תגובת HTTP חזרה לדפדפן ---
+        response = "HTTP/1.1 200 OK\r\n"
+        response += "Content-Type: text/plain\r\n"
+        response += "Access-Control-Allow-Origin: *\r\n" # מאפשר CORS
+        response += "\r\n"
+        response += "OK"
+        client_socket.sendall(response.encode())
+        # ------------------------------------------
 
     except Exception as e:
-        print(f"[!] Error: {e}")
+        print(f"[!] שגיאה בזמן הטיפול בלקוח: {e}")
     finally:
         client_socket.close()
         
