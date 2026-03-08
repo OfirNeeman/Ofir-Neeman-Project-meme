@@ -21,6 +21,8 @@ const App: React.FC = () => {
     isHost: false,
   });
 
+  const [hostFinishedUpload, setHostFinishedUpload] = useState(false);
+
   const updatePhase = (phase: GamePhase) => {
     setGameState(prev => ({ ...prev, phase }));
   };
@@ -43,7 +45,11 @@ const App: React.FC = () => {
   };
 
   const handleStartCaptioning = () => {
-  updatePhase(GamePhase.CAPTIONING);
+    if (gameState.isHost) {
+      setHostFinishedUpload(true); // במקום לעבור שלב, נסמן שהמארח סיים
+    } else {
+      updatePhase(GamePhase.CAPTIONING);
+    }
   };
 
   const handleSubmitCaptions = async (submissions: MemeSubmission[]) => {
@@ -133,13 +139,25 @@ const App: React.FC = () => {
         )}
         
         {gameState.phase === GamePhase.UPLOAD && (
-          <UploadPhase 
-            onUploadComplete={handleImageSelected} 
-            isHost={gameState.isHost}
-            onStartGame={handleStartCaptioning} // העבר פונקציה למעבר שלב
-          />
+          hostFinishedUpload ? (
+            <div className="flex flex-col items-center justify-center min-h-[400px]">
+              {gameState.isHost ? (
+                /* מה שהמארח רואה */
+                <h1 className="text-6xl font-bold text-purple-800 animate-bounce">שלום</h1>
+              ) : (
+                /* מה שהשחקן רואה */
+                <h1 className="text-6xl font-bold text-pink-600 animate-pulse">להתראות</h1>
+              )}
+            </div>
+          ) : (
+            <UploadPhase 
+              onUploadComplete={handleImageSelected} 
+              isHost={gameState.isHost}
+              onStartGame={handleStartCaptioning}
+            />
+          )
         )}
-        
+              
         {gameState.phase === GamePhase.CAPTIONING && gameState.currentImageBase64 && (
           <CaptioningPhase 
             imageSrc={gameState.currentImageBase64} 
