@@ -5,6 +5,39 @@ import urllib.request
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
+import socket
+import threading
+import json
+
+
+# הגדרות TCP
+TCP_IP = '0.0.0.0'
+TCP_PORT = 5001
+
+def handle_tcp_client(conn, addr):
+    try:
+        data = conn.recv(4096)
+        if data:
+            message = json.loads(data.decode('utf-8'))
+            print(f"Received TCP: {message}")
+            response = {"status": "ok", "action": message.get("action")}
+            conn.sendall(json.dumps(response).encode('utf-8'))
+    except Exception as e:
+        print(f"TCP Error: {e}")
+    finally:
+        conn.close() # חשוב לסגור את החיבור בכל פעם
+
+def start_tcp_server():
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((TCP_IP, TCP_PORT))
+    server.listen(5)
+    print(f"[*] שרת TCP Socket מאזין בפורט {TCP_PORT}")
+    while True:
+        conn, addr = server.accept()
+        threading.Thread(target=handle_tcp_client, args=(conn, addr)).start()
+
+# הפעלה ב-Thread נפרד כדי ש-Flask ימשיך לעבוד
+threading.Thread(target=start_tcp_server, daemon=True).start()
 
 # טעינת הגדרות
 load_dotenv()

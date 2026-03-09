@@ -28,16 +28,19 @@ const App: React.FC = () => {
   };
 
   // --- תיקון 1: קבלת roomCode מהלובי ---
-  const handleStartGame = (players: Player[], personality: JudgePersonality, isHost: boolean, code: string) => {
+  const handleStartGame = async (players: any, personality: any, isHost: boolean, code: string) => {
+  // שליחת הודעה דרך הסוקט שהמשחק התחיל
+    await callViaSocket('START_GAME', { roomCode: code });
+    
     setGameState(prev => ({
-      ...prev,
-      players,
-      judgePersonality: personality,
-      phase: GamePhase.UPLOAD,
-      isHost,
-      roomCode: code // שמירת הקוד ב-State הכללי
-    }));
-  };
+        ...prev,
+        players,
+        judgePersonality: personality,
+        phase: GamePhase.UPLOAD,
+        isHost,
+        roomCode: code // שמירת הקוד ב-State הכללי
+      }));
+    };
 
   const handleImageSelected = (base64: string) => {
     setGameState(prev => ({
@@ -98,6 +101,19 @@ const App: React.FC = () => {
     }));
     setHostFinishedUpload(false); // איפוס המצב לסיבוב הבא
   };
+
+  const callViaSocket = async (action: string, data: any) => {
+  try {
+    const response = await fetch('http://localhost:4001/proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...data })
+    });
+    return await response.json();
+  } catch (e) {
+    console.error("Socket Proxy Error:", e);
+  }
+};
 
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-pink-500 selection:text-white">
