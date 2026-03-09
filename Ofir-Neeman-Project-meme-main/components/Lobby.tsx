@@ -7,7 +7,7 @@ import { db } from '../firebase';
 import { doc, setDoc, onSnapshot, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
 
 interface LobbyProps {
-  onStartGame: (players: Player[], personality: JudgePersonality, isHost: boolean) => void;
+  onStartGame: (players: Player[], personality: JudgePersonality, isHost: boolean, roomCode: string) => void;
 }
 
 type LobbyMode = 'MENU' | 'HOST' | 'JOIN' | 'WAITING';
@@ -36,13 +36,14 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
           const data = docSnap.data();
           setPlayers(data.players || []);
           if (mode === 'WAITING' && data.status === 'STARTING') {
-            onStartGame(data.players, data.personality, false);
+            // העברת activeCode כארגומנט רביעי
+            onStartGame(data.players, data.personality, false, activeCode);
           }
         }
       });
     }
     return () => unsubscribe();
-  }, [roomCode, inputCode, mode]);
+  }, [roomCode, inputCode, mode, onStartGame]);
 
   const generateRoomCode = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -124,17 +125,18 @@ const handleJoinGame = async () => {
   }
 };
 
-  const handleStart = async () => {
-    if (players.length >= MIN_PLAYERS) {
-      await updateDoc(doc(db, "games", roomCode), {
-        status: 'STARTING',
-        personality: personality
-      });
-      onStartGame(players, personality, true);
-    } else {
-      alert(`צריך לפחות ${MIN_PLAYERS} שחקנים כדי להתחיל!`);
-    }
-  };
+const handleStart = async () => {
+  if (players.length >= MIN_PLAYERS) {
+    await updateDoc(doc(db, "games", roomCode), {
+      status: 'STARTING',
+      personality: personality
+    });
+    // העברת roomCode כארגומנט רביעי
+    onStartGame(players, personality, true, roomCode);
+  } else {
+    alert(`צריך לפחות ${MIN_PLAYERS} שחקנים כדי להתחיל!`);
+  }
+};
 
   const renderJudgeIcon = (type: JudgePersonality) => {
     switch (type) {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GameState, GamePhase, Player, JudgePersonality, MemeSubmission, AIJudgmentResult } from './types';
+import { GameState, GamePhase, Player, JudgePersonality, MemeSubmission } from './types';
 import { Lobby } from './components/Lobby';
 import UploadPhase from './components/GamePhase/UploadPhase';
 import { CaptioningPhase } from './components/GamePhase/CaptioningPhase';
@@ -17,7 +17,7 @@ const App: React.FC = () => {
     submissions: [],
     judgments: [],
     roundsPlayed: 0,
-    roomCode: null,
+    roomCode: null, // כאן נשמור את הקוד
     isHost: false,
   });
 
@@ -27,13 +27,15 @@ const App: React.FC = () => {
     setGameState(prev => ({ ...prev, phase }));
   };
 
-  const handleStartGame = (players: Player[], personality: JudgePersonality, isHost: boolean) => {
+  // --- תיקון 1: קבלת roomCode מהלובי ---
+  const handleStartGame = (players: Player[], personality: JudgePersonality, isHost: boolean, code: string) => {
     setGameState(prev => ({
       ...prev,
       players,
       judgePersonality: personality,
       phase: GamePhase.UPLOAD,
-      isHost
+      isHost,
+      roomCode: code // שמירת הקוד ב-State הכללי
     }));
   };
 
@@ -46,7 +48,7 @@ const App: React.FC = () => {
 
   const handleStartCaptioning = () => {
     if (gameState.isHost) {
-      setHostFinishedUpload(true); // במקום לעבור שלב, נסמן שהמארח סיים
+      setHostFinishedUpload(true);
     } else {
       updatePhase(GamePhase.CAPTIONING);
     }
@@ -67,7 +69,6 @@ const App: React.FC = () => {
         gameState.judgePersonality
       );
 
-      // Update player scores locally based on results
       const updatedPlayers = gameState.players.map(p => {
         const playerResult = results.find(r => r.playerId === p.id);
         return playerResult ? { ...p, score: p.score + playerResult.totalScore } : p;
@@ -95,36 +96,34 @@ const App: React.FC = () => {
       roundsPlayed: prev.roundsPlayed + 1,
       phase: GamePhase.UPLOAD
     }));
+    setHostFinishedUpload(false); // איפוס המצב לסיבוב הבא
   };
 
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-pink-500 selection:text-white">
-      {/* Header / StatusBar - Only show when game is active (not in Lobby) */}
       {gameState.phase !== GamePhase.LOBBY && (
         <header className="glass-panel border-b border-white/5 p-4 sticky top-0 z-50 shadow-lg">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             <div className="flex items-center gap-6">
-              <span className="font-black text-2xl text-transparent bg-clip-text bg-gradient-to-r from-white to-pink-200 drop-shadow-sm tracking-tight">MEMEMASTER</span>
-              
+              <span className="font-black text-2xl text-transparent bg-clip-text bg-gradient-to-r from-white to-pink-200 tracking-tight">MEMEMASTER</span>
               <div className="hidden md:flex items-center gap-3">
-                <span className="bg-zinc-800 border border-zinc-700 px-4 py-1.5 rounded-full text-sm text-zinc-300 font-bold shadow-inner">
+                <span className="bg-zinc-800 border border-zinc-700 px-4 py-1.5 rounded-full text-sm text-zinc-300 font-bold">
                   סיבוב {gameState.roundsPlayed + 1}
                 </span>
                 {gameState.roomCode && (
-                   <span className="bg-pink-500/20 border border-pink-500/30 px-4 py-1.5 rounded-full text-sm text-pink-200 font-bold shadow-[0_0_15px_rgba(236,72,153,0.3)]">
-                      PIN: {gameState.roomCode}
+                   <span className="bg-pink-500/20 border border-pink-500/30 px-4 py-1.5 rounded-full text-sm text-pink-200 font-bold">
+                     PIN: {gameState.roomCode}
                    </span>
                 )}
               </div>
             </div>
-            
             <div className="flex gap-2 overflow-x-auto pb-1 max-w-[50vw] items-center no-scrollbar">
               {gameState.players.map(p => (
                 <div key={p.id} className="flex flex-col items-center mx-1 group cursor-default">
-                  <div className={`p-1.5 rounded-xl ${p.avatar} shadow-md border-2 border-transparent group-hover:border-white transition-all transform group-hover:-translate-y-1`}>
+                  <div className={`p-1.5 rounded-xl ${p.avatar} shadow-md border-2 border-transparent group-hover:border-white transition-all`}>
                      <Icons.User className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-[10px] font-black mt-1 text-zinc-400 group-hover:text-white transition-colors">{p.score}</span>
+                  <span className="text-[10px] font-black mt-1 text-zinc-400 group-hover:text-white">{p.score}</span>
                 </div>
               ))}
             </div>
@@ -132,7 +131,6 @@ const App: React.FC = () => {
         </header>
       )}
 
-      {/* Main Content Area */}
       <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full relative z-10">
         {gameState.phase === GamePhase.LOBBY && (
           <Lobby onStartGame={handleStartGame} />
@@ -142,15 +140,15 @@ const App: React.FC = () => {
           hostFinishedUpload ? (
             <div className="flex flex-col items-center justify-center min-h-[400px]">
               {gameState.isHost ? (
-                /* מה שהמארח רואה */
-                <h1 className="text-6xl font-bold text-purple-800 animate-bounce">שלום</h1>
+                <h1 className="text-6xl font-bold text-white animate-bounce">המתן לשחקנים... ⏳</h1>
               ) : (
-                /* מה שהשחקן רואה */
-                <h1 className="text-6xl font-bold text-pink-600 animate-pulse">להתראות</h1>
+                <h1 className="text-6xl font-bold text-white animate-pulse">התמונה נשלחה! 🚀</h1>
               )}
             </div>
           ) : (
+            /* תיקון 2: העברת roomCode ל-UploadPhase */
             <UploadPhase 
+              roomCode={gameState.roomCode || ""} 
               onUploadComplete={handleImageSelected} 
               isHost={gameState.isHost}
               onStartGame={handleStartCaptioning}
@@ -179,11 +177,6 @@ const App: React.FC = () => {
           />
         )}
       </main>
-      
-      {/* Footer */}
-      <footer className="p-8 text-center text-zinc-500 text-xs font-medium tracking-widest uppercase opacity-60">
-        <p>Powered by Gemini 2.5 Flash • Created for the meme culture</p>
-      </footer>
     </div>
   );
 };
