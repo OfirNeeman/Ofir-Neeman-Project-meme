@@ -57,7 +57,9 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
     const newCode = generateRoomCode();
     setRoomCode(newCode);
     setMode('HOST');
+    
     try {
+      // 1. יצירת המשחק ב-Firebase (הקוד הקיים שלך)
       await setDoc(doc(db, "games", newCode), {
         status: 'LOBBY',
         players: [],
@@ -65,9 +67,19 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
         createdAt: new Date(),
         isHost: true
       });
+
+      // 2. השלב החדש: יצירת תיקייה בשרת הפייתון
+      const SERVER_IP = "192.168.1.150"; // וודא שזה ה-IP הנכון של המחשב שמריץ פייתון
+      await fetch(`http://${SERVER_IP}:4000/create-room-dir`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ roomCode: newCode }),
+      });
+
     } catch (e) {
-      console.error(e);
-      alert("שגיאה ביצירת חדר");
+      console.error("שגיאה ביצירת חדר או תיקייה:", e);
     }
   };
 

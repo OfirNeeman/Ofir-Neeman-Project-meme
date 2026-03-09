@@ -1,90 +1,89 @@
-import socket
-import threading
 import os
+import random
 import requests
 import urllib.request
-import shutil
-import random
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 from dotenv import load_dotenv
 
-load_dotenv() # טוען את המשתנים מהקובץ .env
+# טעינת הגדרות
+load_dotenv()
 GIPHY_API_KEY = os.getenv("GIPHY_API_KEY")
 PORT = 4000
 UPLOADS_DIR = 'uploads'
 
-MY_CATEGORIES = ['actions', 'vine','bright', 'emotions', 'the office', 'breaking bad', 'dance moms', 'brooklyn 99','כאן 11']
+app = Flask(__name__)
+CORS(app) # מאפשר ל-React לתקשר עם השרת בלי חסימות דפדפן
 
-def clear_uploads_folder():
-    if os.path.exists(UPLOADS_DIR):
-        print("[*] מנקה תיקיית uploads ממשחקים קודמים...")
-        # מוחק את כל התיקייה ויוצר אותה מחדש ריקה
-        shutil.rmtree(UPLOADS_DIR)
-    os.makedirs(UPLOADS_DIR)
+MY_CATEGORIES = ['actions', 'vine', 'bright', 'emotions', 'the office', 'breaking bad', 'dance moms', 'brooklyn 99', 'כאן 11']
 
-def fetch_random_gifs(limit=5):
-    print(f"[*] מושך {limit} GIFs מקטגוריות נבחרות...")
+def init_uploads_dir():
+    if not os.path.exists(UPLOADS_DIR):
+        os.makedirs(UPLOADS_DIR)
+    print(f"[*] Folder {UPLOADS_DIR} is ready.")
+
+def fetch_gifs_for_room(target_dir, limit=3):
+    """מושך GIFs מ-Giphy ושומר אותם בתיקייה ספציפית"""
+    if not GIPHY_API_KEY:
+        print("[!] No GIPHY_API_KEY found in .env")
+        return
     
     for i in range(limit):
-        # בחירת קטגוריה רנדומלית מהרשימה שלך
         chosen_tag = random.choice(MY_CATEGORIES)
-        
         url = f"https://api.giphy.com/v1/gifs/random?api_key={GIPHY_API_KEY}&tag={chosen_tag}&rating=g"
-        
         try:
-            response = requests.get(url).json()
-            gif_url = response['data']['images']['fixed_height']['url']
-            
-            # נשמור את הקובץ עם שם הקטגוריה כדי שנדע מה זה
-            filename = os.path.join(UPLOADS_DIR, f"giphy_{chosen_tag}_{i}.gif")
+            res = requests.get(url).json()
+            gif_url = res['data']['images']['fixed_height']['url']
+            filename = os.path.join(target_dir, f"giphy_{i}.gif")
             urllib.request.urlretrieve(gif_url, filename)
-            print(f"[V] הורדתי GIF בקטגוריית '{chosen_tag}': {filename}")
+            print(f"[V] Downloaded GIF for category: {chosen_tag}")
         except Exception as e:
-            print(f"[!] שגיאה במשיכת GIF עבור {chosen_tag}: {e}")
-            
+            print(f"[!] Error fetching GIF: {e}")
 
-def handle_client(client_socket, addr):
-    print(f"[*] התקבל חיבור מכתובת: {addr}")
+# --- נתיב 1: יצירת תיקייה למשחק חדש ---
+@app.route('/create-room-dir', methods=['POST'])
+def create_room_dir():
+    data = request.json
+    room_code = data.get('roomCode')
+    
+    if not room_code:
+        return jsonify({"error": "No room code provided"}), 400
+    
+    room_path = os.path.join(UPLOADS_DIR, room_code)
+    
     try:
-        # קריאת הבקשה
-        request = client_socket.recv(4096)
-        
-        # שמירת הקובץ (הלוגיקה הקיימת שלך)
-        filename = f"{UPLOADS_DIR}/image_{addr[1]}.jpg"
-        with open(filename, "wb") as f:
-            f.write(request.split(b'\r\n\r\n')[-1])
-            while True:
-                client_socket.settimeout(1.0) # הוספת timeout כדי לא להיתקע
-                try:
-                    data = client_socket.recv(4096)
-                    if not data: break
-                    f.write(data)
-                except socket.timeout:
-                    break
-        
-        print(f"[V] הקובץ נשמר בהצלחה: {filename}")
-
-        # --- התיקון: שליחת תגובת HTTP חזרה לדפדפן ---
-        response = "HTTP/1.1 200 OK\r\n"
-        response += "Content-Type: text/plain\r\n"
-        response += "Access-Control-Allow-Origin: *\r\n" # מאפשר CORS
-        response += "\r\n"
-        response += "OK"
-        client_socket.sendall(response.encode())
-        # ------------------------------------------
-
+        if not os.path.exists(room_path):
+            os.makedirs(room_path)
+            # כשנוצר חדר, אנחנו ישר מושכים לו כמה GIFs שיהיו מוכנים בתיקייה שלו
+            fetch_gifs_for_room(room_path, 3)
+            return jsonify({"status": "success", "message": f"Room {room_code} created with GIFs"}), 201
+        return jsonify({"status": "exists"}), 200
     except Exception as e:
-        print(f"[!] שגיאה בזמן הטיפול בלקוח: {e}")
-    finally:
-        client_socket.close()
-        
-if __name__ == "__main__":
-    clear_uploads_folder() # ניקוי לפני הכל
-    fetch_random_gifs(3)
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(('0.0.0.0', PORT))
-    server.listen(5)
-    print(f"[*] השרת מאזין בפורט {PORT}... מחכה לטלפון שלך.")
+        return jsonify({"error": str(e)}), 500
 
-    while True:
-        client, addr = server.accept()
-        threading.Thread(target=handle_client, args=(client, addr)).start()
+# --- נתיב 2: העלאת תמונה מהטלפון לתיקייה של החדר ---
+@app.route('/upload/<room_code>', methods=['POST'])
+def upload_file(room_code):
+    room_path = os.path.join(UPLOADS_DIR, room_code)
+    
+    # וודוא שהתיקייה קיימת (למקרה שהבקשה הגיעה לפני ה-create)
+    if not os.path.exists(room_path):
+        os.makedirs(room_path)
+
+    if not request.data:
+        return "No data", 400
+
+    # שמירת הקובץ עם שם ייחודי
+    filename = f"user_{random.randint(1000, 9999)}.jpg"
+    file_path = os.path.join(room_path, filename)
+    
+    with open(file_path, "wb") as f:
+        f.write(request.data)
+    
+    print(f"[V] Image saved to room {room_code}: {filename}")
+    return jsonify({"status": "success", "path": file_path}), 200
+
+if __name__ == "__main__":
+    init_uploads_dir()
+    # הרצת השרת - הפקודה הזו חייבת להיות אחרונה!
+    app.run(host='0.0.0.0', port=PORT, debug=True)

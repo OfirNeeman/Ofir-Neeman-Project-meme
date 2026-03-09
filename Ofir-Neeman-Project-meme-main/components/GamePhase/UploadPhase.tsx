@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 interface UploadPhaseProps {
   onUploadComplete: (imageUrl: string) => void;
   isHost: boolean;
+  roomCode: string;
   onStartGame: () => void
 }
 
-const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onStartGame }) => {
+const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onStartGame, roomCode }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -26,14 +27,13 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onS
       try {
         const SERVER_IP = "192.168.1.150"; // ודאי שזה ה-IP הנכון!
         
-        console.log("מתחיל שליחה לסוקט...");
-        await fetch(`http://${SERVER_IP}:4000`, {
-          method: 'POST',
-          body: file,
-          mode: 'no-cors'
-        });
+        console.log("מתחיל שליחה לשרת...");
+          // שינוי הנתיב ל-upload/ROOM_CODE
+          await fetch(`http://${SERVER_IP}:4000/upload/${roomCode}`, {
+            method: 'POST',
+            body: file, // שליחת הקובץ הגולמי
+          });
         
-        console.log("הסוקט סיים (או לפחות שלח)");
         setUploadStatus('success');
         setSelectedImage(base64String);
         
@@ -43,7 +43,7 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onS
         }, 1000); // השהייה קלה כדי שתראי את ה-V הירוק
 
       } catch (error) {
-        console.error("נכשל בשליחה לסוקט:", error);
+        console.error("נכשל בשליחה:", error);
         setUploadStatus('error');
         // אם את רוצה שהמשחק ימשיך גם כשזה נכשל:
         // onUploadComplete(base64String); 
