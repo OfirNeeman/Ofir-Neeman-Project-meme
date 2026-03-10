@@ -28,20 +28,29 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
 
   useEffect(() => {
     let unsubscribe = () => {};
+    
+    // קביעת הקוד הפעיל בהתאם לתפקיד המשתמש (מארח או שחקן)
     const activeCode = mode === 'HOST' ? roomCode : inputCode.toUpperCase();
 
     if (activeCode && activeCode.length === 5) {
+      // האזנה לשינויים במסמך המשחק ב-Firebase
       unsubscribe = onSnapshot(doc(db, "games", activeCode), (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
+          
+          // עדכון רשימת השחקנים שכולם יראו מי הצטרף לחדר
           setPlayers(data.players || []);
+
+          // בדיקה עבור שחקנים שממתינים: האם המארח התחיל את המשחק?
+          // אם הסטטוס הוא 'STARTING', הפונקציה onStartGame תעביר את האפליקציה לשלב ה-UPLOAD
           if (mode === 'WAITING' && data.status === 'STARTING') {
-            // העברת activeCode כארגומנט רביעי
             onStartGame(data.players, data.personality, false, activeCode);
           }
         }
       });
     }
+
+    // ניקוי המאזין כשהקומפוננטה נסגרת
     return () => unsubscribe();
   }, [roomCode, inputCode, mode, onStartGame]);
 

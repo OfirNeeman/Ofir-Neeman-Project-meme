@@ -7,6 +7,9 @@ import { JudgingPhase } from './components/GamePhase/JudgingPhase';
 import { ResultsPhase } from './components/GamePhase/ResultsPhase';
 import { judgeMemes } from './services/geminiService';
 import { Icons } from './components/ui/Icons';
+import { useEffect } from 'react';
+import { db } from './firebase'; 
+import { doc, updateDoc, onSnapshot } from "firebase/firestore"; // הוסף את אלו
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -49,9 +52,19 @@ const App: React.FC = () => {
     }));
   };
 
-  const handleStartCaptioning = () => {
-    if (gameState.isHost) {
-      setHostFinishedUpload(true);
+// בתוך App.tsx
+  const handleStartCaptioning = async () => {
+    if (gameState.isHost && gameState.roomCode) {
+      try {
+        // מעדכנים את Firebase - זה יגרום ל-useEffect של כולם "לקפוץ"
+        await updateDoc(doc(db, "games", gameState.roomCode), {
+          status: 'HOST_FINISHED_UPLOAD'
+        });
+        // למארח עצמו אנחנו מעדכנים גם מקומית ליתר ביטחון
+        setHostFinishedUpload(true);
+      } catch (e) {
+        console.error("שגיאה בעדכון סטטוס מארח:", e);
+      }
     } else {
       updatePhase(GamePhase.CAPTIONING);
     }
@@ -115,6 +128,25 @@ const App: React.FC = () => {
   }
 };
 
+useEffect(() => {
+  let unsubscribe = () => {};
+
+  // מאזינים לשינויים בחדר רק אם המשחק התחיל ויש קוד חדר
+  if (gameState.phase !== GamePhase.LOBBY && gameState.roomCode) {
+    unsubscribe = onSnapshot(doc(db, "games", gameState.roomCode), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        // אם הסטטוס השתנה לזה שהמארח סיים - כולם מעדכנים את ה-State המקומי
+        if (data.status === 'HOST_FINISHED_UPLOAD') {
+          setHostFinishedUpload(true);
+        }
+      }
+    });
+  }
+
+  return () => unsubscribe();
+}, [gameState.phase, gameState.roomCode]);
+
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-pink-500 selection:text-white">
       {gameState.phase !== GamePhase.LOBBY && (
@@ -156,13 +188,12 @@ const App: React.FC = () => {
           hostFinishedUpload ? (
             <div className="flex flex-col items-center justify-center min-h-[400px]">
               {gameState.isHost ? (
-                <h1 className="text-6xl font-bold text-white animate-bounce">המתן לשחקנים... ⏳</h1>
+                <h1 className="text-6xl font-bold text-white animate-bounce">שלום</h1>
               ) : (
-                <h1 className="text-6xl font-bold text-white animate-pulse">התמונה נשלחה! 🚀</h1>
+                <h1 className="text-6xl font-bold text-white animate-pulse">להתראות</h1>
               )}
             </div>
           ) : (
-            /* תיקון 2: העברת roomCode ל-UploadPhase */
             <UploadPhase 
               roomCode={gameState.roomCode || ""} 
               onUploadComplete={handleImageSelected} 
