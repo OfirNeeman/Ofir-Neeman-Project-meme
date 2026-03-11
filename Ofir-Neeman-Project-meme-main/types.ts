@@ -44,5 +44,6 @@ export interface GameState {
   judgments: AIJudgmentResult[];
   roundsPlayed: number;
   roomCode: string | null; // New: The active room code
-  isHost: boolean;         // New: Is this client the host?
+  isHost: boolean;
+  currentPlayerId: string | null; // New: The ID of the current player
 }

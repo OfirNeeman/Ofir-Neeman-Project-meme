@@ -20,8 +20,9 @@ const App: React.FC = () => {
     submissions: [],
     judgments: [],
     roundsPlayed: 0,
-    roomCode: null, // כאן נשמור את הקוד
+    roomCode: null,
     isHost: false,
+    currentPlayerId: null, // שומר את ה-ID של המשתמש הנוכחי
   });
 
   const [hostFinishedUpload, setHostFinishedUpload] = useState(false);
@@ -31,19 +32,25 @@ const App: React.FC = () => {
   };
 
   // --- תיקון 1: קבלת roomCode מהלובי ---
-  const handleStartGame = async (players: any, personality: any, isHost: boolean, code: string) => {
-  // שליחת הודעה דרך הסוקט שהמשחק התחיל
-    await callViaSocket('START_GAME', { roomCode: code });
-    
-    setGameState(prev => ({
-        ...prev,
-        players,
-        judgePersonality: personality,
-        phase: GamePhase.UPLOAD,
-        isHost,
-        roomCode: code // שמירת הקוד ב-State הכללי
-      }));
-    };
+  const handleStartGame = async (
+      players: Player[], 
+      personality: JudgePersonality, 
+      isHost: boolean, 
+      code: string,
+      playerId?: string // הוספת פרמטר לקבלת ה-ID של המשתמש
+    ) => {
+      await callViaSocket('START_GAME', { roomCode: code });
+      
+      setGameState(prev => ({
+          ...prev,
+          players,
+          judgePersonality: personality,
+          phase: GamePhase.UPLOAD,
+          isHost,
+          roomCode: code,
+          currentPlayerId: playerId || prev.currentPlayerId // שמירת ה-ID בסטייט
+        }));
+      };
 
   const handleImageSelected = (base64: string) => {
     setGameState(prev => ({
@@ -190,7 +197,13 @@ useEffect(() => {
               {gameState.isHost ? (
                 <h1 className="text-6xl font-bold text-white animate-bounce">שלום</h1>
               ) : (
-                <h1 className="text-6xl font-bold text-white animate-pulse">להתראות</h1>
+                <div className="text-center">
+                  {/* ניסיון למצוא את השם של השחקן הנוכחי מתוך הרשימה */}
+                  <h1 className="text-6xl font-bold text-white animate-pulse">
+                   להתראות, {gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || "שחקן"}
+                  </h1>
+                  <p className="text-pink-200 mt-4 text-2xl font-bold">המארח מכין את הממים... ⏳</p>
+                </div>
               )}
             </div>
           ) : (

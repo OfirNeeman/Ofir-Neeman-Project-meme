@@ -7,7 +7,7 @@ import { db } from '../firebase';
 import { doc, setDoc, onSnapshot, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
 
 interface LobbyProps {
-  onStartGame: (players: Player[], personality: JudgePersonality, isHost: boolean, roomCode: string) => void;
+  onStartGame: (players: Player[], personality: JudgePersonality, isHost: boolean, roomCode: string, playerId?: string) => void;
 }
 
 type LobbyMode = 'MENU' | 'HOST' | 'JOIN' | 'WAITING';
@@ -20,6 +20,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [personality, setPersonality] = useState<JudgePersonality>(JudgePersonality.ROASTER);
   const [joined, setJoined] = useState(false);
+  const [localPlayerId, setLocalPlayerId] = useState<string | null>(null);
 
   const colors = [
     'bg-pink-500', 'bg-rose-500', 'bg-fuchsia-500', 'bg-purple-500', 
@@ -44,7 +45,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
           // בדיקה עבור שחקנים שממתינים: האם המארח התחיל את המשחק?
           // אם הסטטוס הוא 'STARTING', הפונקציה onStartGame תעביר את האפליקציה לשלב ה-UPLOAD
           if (mode === 'WAITING' && data.status === 'STARTING') {
-            onStartGame(data.players, data.personality, false, activeCode);
+            onStartGame(data.players, data.personality, false, activeCode, localPlayerId || undefined);
           }
         }
       });
@@ -52,7 +53,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
 
     // ניקוי המאזין כשהקומפוננטה נסגרת
     return () => unsubscribe();
-  }, [roomCode, inputCode, mode, onStartGame]);
+  }, [roomCode, inputCode, mode, onStartGame, localPlayerId]);
 
   const generateRoomCode = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -120,13 +121,14 @@ const handleJoinGame = async () => {
     }
 
     const avatar = colors[Math.floor(Math.random() * colors.length)];
-    const newPlayer = { id: crypto.randomUUID(), name: playerName.trim(), score: 0, avatar: avatar };
-
+    const newId = crypto.randomUUID(); 
+    const newPlayer = { id: newId, name: playerName.trim(), score: 0, avatar: avatar };
     await updateDoc(roomRef, {
       players: arrayUnion(newPlayer)
     });
     
     setMode('WAITING');
+    setLocalPlayerId(newId); // שמירת ה-ID של השחקן המקומי
     setJoined(true);
   } catch (e) {
     console.error(e);
