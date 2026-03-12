@@ -80,7 +80,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
       });
 
       // 2. השלב החדש: יצירת תיקייה בשרת הפייתון
-      const SERVER_IP = "192.168.1.150"; // וודא שזה ה-IP הנכון של המחשב שמריץ פייתון
+      const SERVER_IP = "192.168.1.149"; // וודא שזה ה-IP הנכון של המחשב שמריץ פייתון
       await fetch(`http://${SERVER_IP}:4000/create-room-dir`, {
         method: 'POST',
         headers: {

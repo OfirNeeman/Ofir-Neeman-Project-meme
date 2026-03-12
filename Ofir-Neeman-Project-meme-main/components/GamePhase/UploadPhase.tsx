@@ -25,7 +25,7 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onS
       const base64String = reader.result as string;
       
       try {
-        const SERVER_IP = "192.168.1.150"; // ודאי שזה ה-IP הנכון!
+        const SERVER_IP = "192.168.1.149"; // ודאי שזה ה-IP הנכון!
         
         console.log("מתחיל שליחה לשרת...");
           // שינוי הנתיב ל-upload/ROOM_CODE

@@ -36,4 +36,3 @@ uploads/
 # מידע רגיש
 .env
 .env.local
-server.env

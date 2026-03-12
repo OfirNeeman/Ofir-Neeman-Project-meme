@@ -9,7 +9,21 @@ import socket
 import threading
 import json
 
+import os
+from dotenv import load_dotenv
+from pathlib import Path
 
+# הגדרת הנתיב המדויק לקובץ ה-env שלך
+# אם הקובץ בתיקיית server ושמו server.env:
+env_path = Path('server') / 'server.env' 
+load_dotenv(dotenv_path=env_path)
+
+GIPHY_API_KEY = os.getenv("GIPHY_API_KEY")
+
+PORT = 4000
+UPLOADS_DIR = 'uploads'
+# בדיקה קריטית - אם זה מדפיס None, המפתח עדיין לא נטען
+print(f"Checking API Key: {GIPHY_API_KEY}")
 # הגדרות TCP
 TCP_IP = '0.0.0.0'
 TCP_PORT = 5001
@@ -40,10 +54,7 @@ def start_tcp_server():
 threading.Thread(target=start_tcp_server, daemon=True).start()
 
 # טעינת הגדרות
-load_dotenv()
-GIPHY_API_KEY = os.getenv("GIPHY_API_KEY")
-PORT = 4000
-UPLOADS_DIR = 'uploads'
+
 
 app = Flask(__name__)
 CORS(app) # מאפשר ל-React לתקשר עם השרת בלי חסימות דפדפן
