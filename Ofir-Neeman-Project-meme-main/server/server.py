@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 import socket
 import threading
 import json
-
+import base64
 import os
 from dotenv import load_dotenv
 from pathlib import Path
@@ -127,6 +127,31 @@ def upload_file(room_code):
     
     print(f"[V] Image saved to room {room_code}: {filename}")
     return jsonify({"status": "success", "path": file_path}), 200
+
+@app.route('/image_base64/<room_code>', methods=['GET'])
+def get_image_base64(room_code):
+    room_path = os.path.join(UPLOADS_DIR, room_code)
+
+    if not os.path.exists(room_path):
+        return jsonify({"error": "Room not found"}), 404
+
+    files = os.listdir(room_path)
+
+    if not files:
+        return jsonify({"error": "No images"}), 404
+
+    latest_file = max(
+        [os.path.join(room_path, f) for f in files],
+        key=os.path.getctime
+    )
+
+    with open(latest_file, "rb") as img:
+        encoded = base64.b64encode(img.read()).decode("utf-8")
+
+    return jsonify({
+        "status": "success",
+        "image": encoded
+    }), 200
 
 if __name__ == "__main__":
     init_uploads_dir()

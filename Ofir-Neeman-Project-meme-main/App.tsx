@@ -25,6 +25,7 @@ const App: React.FC = () => {
     currentPlayerId: null, // שומר את ה-ID של המשתמש הנוכחי
   });
 
+  const [image, setImage] = useState(null);
   const [hostFinishedUpload, setHostFinishedUpload] = useState(false);
 
   const updatePhase = (phase: GamePhase) => {
@@ -63,12 +64,20 @@ const App: React.FC = () => {
   const handleStartCaptioning = async () => {
     if (gameState.isHost && gameState.roomCode) {
       try {
+        const SERVER_IP = "192.168.1.149"
         // מעדכנים את Firebase - זה יגרום ל-useEffect של כולם "לקפוץ"
         await updateDoc(doc(db, "games", gameState.roomCode), {
           status: 'HOST_FINISHED_UPLOAD'
         });
         // למארח עצמו אנחנו מעדכנים גם מקומית ליתר ביטחון
         setHostFinishedUpload(true);
+      const response = await fetch(
+        `http://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`
+      );
+      const data = await response.json();
+      const imageBase64 = data.image;
+      setImage(imageBase64);
+      console.log("Received image:", imageBase64);
       } catch (e) {
         console.error("שגיאה בעדכון סטטוס מארח:", e);
       }
@@ -195,7 +204,11 @@ useEffect(() => {
           hostFinishedUpload ? (
             <div className="flex flex-col items-center justify-center min-h-[400px]">
               {gameState.isHost ? (
-                <h1 className="text-6xl font-bold text-white animate-bounce">שלום</h1>
+                <h1><img
+                src={`data:image/jpeg;base64,${image}`}
+                alt="uploaded meme"
+                className="max-w-lg rounded-xl shadow-lg"
+              /></h1>
               ) : (
                 <div className="text-center">
                   {/* ניסיון למצוא את השם של השחקן הנוכחי מתוך הרשימה */}
