@@ -43,6 +43,7 @@ def handle_tcp_client(conn, addr):
 
 def start_tcp_server():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((TCP_IP, TCP_PORT))
     server.listen(5)
     print(f"[*] שרת TCP Socket מאזין בפורט {TCP_PORT}")
