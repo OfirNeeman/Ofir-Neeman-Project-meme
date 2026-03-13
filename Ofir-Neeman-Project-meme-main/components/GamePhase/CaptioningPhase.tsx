@@ -58,11 +58,11 @@ export const CaptioningPhase: React.FC<CaptioningPhaseProps> = ({ imageSrc, play
   return (
     <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12 items-start animate-fade-in pt-4">
       {/* Image Preview */}
-      <div className="w-full lg:w-1/2">
+    {/*  <div className="w-full lg:w-1/2">
         <div className="bg-black rounded-[2rem] overflow-hidden shadow-2xl shadow-black/50 border-4 border-zinc-800 relative group">
            <img src={imageSrc} alt="Meme Context" className="w-full h-auto object-contain" />
         </div>
-      </div>
+      </div> */}
 
       {/* Input Area */}
       <div className="w-full lg:w-1/2 flex flex-col space-y-8">

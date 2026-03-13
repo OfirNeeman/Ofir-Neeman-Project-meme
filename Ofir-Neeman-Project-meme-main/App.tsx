@@ -147,21 +147,35 @@ const App: React.FC = () => {
 useEffect(() => {
   let unsubscribe = () => {};
 
-  // מאזינים לשינויים בחדר רק אם המשחק התחיל ויש קוד חדר
   if (gameState.phase !== GamePhase.LOBBY && gameState.roomCode) {
-    unsubscribe = onSnapshot(doc(db, "games", gameState.roomCode), (docSnap) => {
+    unsubscribe = onSnapshot(doc(db, "games", gameState.roomCode), async (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        // אם הסטטוס השתנה לזה שהמארח סיים - כולם מעדכנים את ה-State המקומי
-        if (data.status === 'HOST_FINISHED_UPLOAD') {
-          setHostFinishedUpload(true);
+        
+        // הוספנו בדיקה: האם הסטטוס הוא סיום העלאה וגם האם המשתמש הנוכחי הוא שחקן (לא מארח)
+        if (data.status === 'HOST_FINISHED_UPLOAD' && !gameState.isHost) {
+          try {
+            const SERVER_IP = "192.168.1.149";
+            const response = await fetch(`http://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`);
+            const imageData = await response.json();
+            
+            setGameState(prev => ({
+              ...prev,
+              currentImageBase64: imageData.image,
+              phase: GamePhase.CAPTIONING 
+            }));
+            
+            setHostFinishedUpload(true);
+          } catch (e) {
+            console.error("Error fetching image for player:", e);
+          }
         }
       }
     });
   }
 
   return () => unsubscribe();
-}, [gameState.phase, gameState.roomCode]);
+}, [gameState.phase, gameState.roomCode, gameState.isHost]); // הוספנו את isHost לרשימת התלות
 
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-pink-500 selection:text-white">
@@ -213,7 +227,7 @@ useEffect(() => {
                 <div className="text-center">
                   {/* ניסיון למצוא את השם של השחקן הנוכחי מתוך הרשימה */}
                   <h1 className="text-6xl font-bold text-white animate-pulse">
-                   להתראות, {gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || "שחקן"}
+                    {gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || "שחקן"}
                   </h1>
                   <p className="text-pink-200 mt-4 text-2xl font-bold">המארח מכין את הממים... ⏳</p>
                 </div>
