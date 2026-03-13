@@ -263,12 +263,33 @@ return (
         )}
               
         {gameState.phase === GamePhase.CAPTIONING && (gameState.currentImageBase64 || image) && (
+          gameState.isHost ? (
+    /* מה שהמארח רואה בזמן שהאחרים כותבים */
+            <div className="flex flex-col items-center justify-center space-y-8 animate-in fade-in">
+              <h2 className="text-3xl font-black text-white italic">השחקנים כותבים כרגע... 🔥</h2>
+              <div className="relative group">
+                <img 
+                  src={`data:image/jpeg;base64,${image}`} 
+                  alt="Meme being captioned" 
+                  className="max-w-2xl rounded-[2rem] border-8 border-zinc-800 shadow-2xl"
+                />
+                <div className="absolute -bottom-4 -right-4 bg-pink-500 text-white px-6 py-2 rounded-full font-bold shadow-lg">
+                  ממתין לכיתובים...
+                </div>
+              </div>
+              <div className="flex gap-4">
+                {/* אופציונלי: הצגת התקדמות השחקנים */}
+                <p className="text-zinc-400 font-medium">הכיתובים יופיעו כאן ברגע שכולם יסיימו.</p>
+              </div>
+            </div>
+          ) : (
           <CaptioningPhase 
             imageSrc={gameState.isHost ? `data:image/jpeg;base64,${image}` : (gameState.currentImageBase64 || "")} 
             playerId={gameState.currentPlayerId!} 
             playerName={gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || ""}
             onSubmitCaption={handleSubmitSingleCaption}
           />
+          )
         )}
         
         {gameState.phase === GamePhase.JUDGING && (
