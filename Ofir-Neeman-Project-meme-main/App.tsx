@@ -152,8 +152,8 @@ useEffect(() => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         
-        // הוספנו בדיקה: האם הסטטוס הוא סיום העלאה וגם האם המשתמש הנוכחי הוא שחקן (לא מארח)
-        if (data.status === 'HOST_FINISHED_UPLOAD' && !gameState.isHost) {
+        // מעבר שלב הכתיבה לשחקנים
+        if (data.status === 'HOST_FINISHED_UPLOAD' && !gameState.isHost && gameState.phase === GamePhase.UPLOAD) {
           try {
             const SERVER_IP = "192.168.1.149";
             const response = await fetch(`http://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`);
@@ -164,39 +164,60 @@ useEffect(() => {
               currentImageBase64: imageData.image,
               phase: GamePhase.CAPTIONING 
             }));
-            
             setHostFinishedUpload(true);
           } catch (e) {
             console.error("Error fetching image for player:", e);
           }
         }
-        if (gameState.isHost && data.submissions && data.submissions.length === gameState.players.length && gameState.phase === GamePhase.CAPTIONING) {
-          console.log("כולם סיימו! שולח לשיפוט...");
-          // הפעלת פונקציית השיפוט עם כל הנתונים שנאספו מ-Firebase
-          handleSubmitCaptions(data.submissions);
+
+        // לוגיקת המארח: בדיקת סיום כתיבה עבור כולם
+        if (gameState.isHost && data.submissions && gameState.phase === GamePhase.CAPTIONING) {
+          const uniquePlayerSubmissions = new Set(data.submissions.map((s: any) => s.playerId));
+          
+          if (uniquePlayerSubmissions.size === gameState.players.length) {
+            console.log("כולם סיימו! מסנן כפילויות ושולח לשיפוט...");
+            
+            // לוקחים רק כיתוב אחד לכל שחקן (למקרה של באג רשת)
+            const finalizedSubmissions = gameState.players.map(p => 
+              data.submissions.find((s: any) => s.playerId === p.id)
+            ).filter(Boolean);
+
+            // הפעלת השיפוט
+            handleSubmitCaptions(finalizedSubmissions);
+          }
         }
       }
     });
   }
 
   return () => unsubscribe();
-}, [gameState.phase, gameState.roomCode, gameState.isHost]); // הוספנו את isHost לרשימת התלות
+}, [gameState.phase, gameState.roomCode, gameState.isHost, gameState.players.length]);
 
 const handleSubmitSingleCaption = async (caption: string) => {
   if (!gameState.roomCode || !gameState.currentPlayerId) return;
-
-  const roomRef = doc(db, "games", gameState.roomCode);
+  setGameState(prev => ({
+    ...prev,
+    phase: GamePhase.JUDGING // מעביר את השחקן למסך המתנה (JudgingPhase)
+  }));
+  try {
+    const roomRef = doc(db, "games", gameState.roomCode);
   
   // הוספת הכיתוב של השחקן הספציפי למערך ב-Firebase
-  await updateDoc(roomRef, {
-    submissions: arrayUnion({
-      playerId: gameState.currentPlayerId,
-      caption: caption
-    })
+    await updateDoc(roomRef, {
+      submissions: arrayUnion({
+        playerId: gameState.currentPlayerId,
+        caption: caption
+      })
   });
-
-  // ניתן להעביר את השחקן למסך המתנה עד שכולם יסיימו
-  updatePhase(GamePhase.JUDGING); 
+} catch (e) {
+  console.error("Error submitting caption:", e);
+    // אופציונלי: במקרה של שגיאה אמיתית, אפשר להחזיר אותו לנסות שוב
+    alert("שגיאה בשליחה, נסה שוב");
+    setGameState(prev => ({ ...prev, phase: GamePhase.CAPTIONING }));
+  }
+    // אופציונלי: אם השליחה נכשלה, להחזיר אותו לכתיבה
+    // setGameState(prev => ({ ...prev, phase: GamePhase.CAPTIONING }));
+  // ניתן להעביר את השחקן למסך המתנה עד שכולם יסיימו 
 };
 
   return (
