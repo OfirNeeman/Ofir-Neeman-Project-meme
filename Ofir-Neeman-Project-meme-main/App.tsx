@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GameState, GamePhase, Player, JudgePersonality, MemeSubmission } from './types';
 import { Lobby } from './components/Lobby';
 import UploadPhase from './components/GamePhase/UploadPhase';
@@ -7,9 +7,8 @@ import { JudgingPhase } from './components/GamePhase/JudgingPhase';
 import { ResultsPhase } from './components/GamePhase/ResultsPhase';
 import { judgeMemes } from './services/geminiService';
 import { Icons } from './components/ui/Icons';
-import { useEffect } from 'react';
-import { db } from './firebase'; 
-import { doc, updateDoc, onSnapshot, arrayUnion } from "firebase/firestore"
+import { db } from './firebase';
+import { doc, updateDoc, onSnapshot, arrayUnion } from "firebase/firestore";
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -22,36 +21,34 @@ const App: React.FC = () => {
     roundsPlayed: 0,
     roomCode: null,
     isHost: false,
-    currentPlayerId: null, // שומר את ה-ID של המשתמש הנוכחי
+    currentPlayerId: null,
   });
 
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState<string | null>(null);
   const [hostFinishedUpload, setHostFinishedUpload] = useState(false);
 
   const updatePhase = (phase: GamePhase) => {
     setGameState(prev => ({ ...prev, phase }));
   };
 
-  // --- תיקון 1: קבלת roomCode מהלובי ---
   const handleStartGame = async (
-      players: Player[], 
-      personality: JudgePersonality, 
-      isHost: boolean, 
-      code: string,
-      playerId?: string // הוספת פרמטר לקבלת ה-ID של המשתמש
-    ) => {
-      await callViaSocket('START_GAME', { roomCode: code });
-      
-      setGameState(prev => ({
-          ...prev,
-          players,
-          judgePersonality: personality,
-          phase: GamePhase.UPLOAD,
-          isHost,
-          roomCode: code,
-          currentPlayerId: playerId || prev.currentPlayerId // שמירת ה-ID בסטייט
-        }));
-      };
+    players: Player[],
+    personality: JudgePersonality,
+    isHost: boolean,
+    code: string,
+    playerId?: string
+  ) => {
+    await callViaSocket('START_GAME', { roomCode: code });
+    setGameState(prev => ({
+      ...prev,
+      players,
+      judgePersonality: personality,
+      phase: GamePhase.UPLOAD,
+      isHost,
+      roomCode: code,
+      currentPlayerId: playerId || prev.currentPlayerId
+    }));
+  };
 
   const handleImageSelected = (base64: string) => {
     setGameState(prev => ({
@@ -60,24 +57,18 @@ const App: React.FC = () => {
     }));
   };
 
-// בתוך App.tsx
   const handleStartCaptioning = async () => {
     if (gameState.isHost && gameState.roomCode) {
       try {
-        const SERVER_IP = "192.168.1.149"
-        // מעדכנים את Firebase - זה יגרום ל-useEffect של כולם "לקפוץ"
+        const SERVER_IP = "192.168.1.149";
         await updateDoc(doc(db, "games", gameState.roomCode), {
           status: 'HOST_FINISHED_UPLOAD'
         });
-        // למארח עצמו אנחנו מעדכנים גם מקומית ליתר ביטחון
         setHostFinishedUpload(true);
-      const response = await fetch(
-        `http://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`
-      );
-      const data = await response.json();
-      const imageBase64 = data.image;
-      setImage(imageBase64);
-      console.log("Received image:", imageBase64);
+        const response = await fetch(`http://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`);
+        const data = await response.json();
+        setImage(data.image);
+        updatePhase(GamePhase.CAPTIONING);
       } catch (e) {
         console.error("שגיאה בעדכון סטטוס מארח:", e);
       }
@@ -87,18 +78,16 @@ const App: React.FC = () => {
   };
 
   const handleSubmitCaptions = async (submissions: MemeSubmission[]) => {
-    setGameState(prev => ({
-      ...prev,
-      submissions,
-      phase: GamePhase.JUDGING
-    }));
+    updatePhase(GamePhase.JUDGING);
 
     try {
+      const imageToJudge = gameState.currentImageBase64 || image;
+      if (!imageToJudge) throw new Error("No image found for judging");
+
       const results = await judgeMemes(
-        gameState.currentImageBase64!,
+        imageToJudge,
         submissions,
-        gameState.players,
-        gameState.judgePersonality
+        gameState.players
       );
 
       const updatedPlayers = gameState.players.map(p => {
@@ -114,12 +103,18 @@ const App: React.FC = () => {
       }));
     } catch (error) {
       console.error("Critical game error:", error);
-      alert("אירעה שגיאה בשיפוט. נסה שוב.");
+      alert("אירעה שגיאה בשיפוט ה-AI.");
       updatePhase(GamePhase.LOBBY);
     }
   };
 
-  const handleNextRound = () => {
+  const handleNextRound = async () => {
+    if (gameState.isHost && gameState.roomCode) {
+        await updateDoc(doc(db, "games", gameState.roomCode), {
+            submissions: [],
+            status: 'WAITING_FOR_UPLOAD'
+        });
+    }
     setGameState(prev => ({
       ...prev,
       currentImageBase64: null,
@@ -128,99 +123,77 @@ const App: React.FC = () => {
       roundsPlayed: prev.roundsPlayed + 1,
       phase: GamePhase.UPLOAD
     }));
-    setHostFinishedUpload(false); // איפוס המצב לסיבוב הבא
+    setImage(null);
+    setHostFinishedUpload(false);
   };
 
   const callViaSocket = async (action: string, data: any) => {
-  try {
-    const response = await fetch('http://localhost:4001/proxy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, ...data })
-    });
-    return await response.json();
-  } catch (e) {
-    console.error("Socket Proxy Error:", e);
-  }
-};
+    try {
+      const response = await fetch('http://localhost:4001/proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...data })
+      });
+      return await response.json();
+    } catch (e) {
+      console.error("Socket Proxy Error:", e);
+    }
+  };
 
-useEffect(() => {
-  let unsubscribe = () => {};
+  useEffect(() => {
+    let unsubscribe = () => {};
 
-  if (gameState.phase !== GamePhase.LOBBY && gameState.roomCode) {
-    unsubscribe = onSnapshot(doc(db, "games", gameState.roomCode), async (docSnap) => {
-      if (docSnap.exists()) {
+    if (gameState.phase !== GamePhase.LOBBY && gameState.roomCode) {
+      unsubscribe = onSnapshot(doc(db, "games", gameState.roomCode), async (docSnap) => {
+        if (!docSnap.exists()) return;
         const data = docSnap.data();
-        
-        // מעבר שלב הכתיבה לשחקנים
+
+        // מעבר שלב לשחקנים
         if (data.status === 'HOST_FINISHED_UPLOAD' && !gameState.isHost && gameState.phase === GamePhase.UPLOAD) {
           try {
             const SERVER_IP = "192.168.1.149";
             const response = await fetch(`http://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`);
             const imageData = await response.json();
-            
             setGameState(prev => ({
               ...prev,
               currentImageBase64: imageData.image,
-              phase: GamePhase.CAPTIONING 
+              phase: GamePhase.CAPTIONING
             }));
             setHostFinishedUpload(true);
-          } catch (e) {
-            console.error("Error fetching image for player:", e);
-          }
+          } catch (e) { console.error(e); }
         }
 
-        // לוגיקת המארח: בדיקת סיום כתיבה עבור כולם
-        if (gameState.isHost && data.submissions && gameState.phase === GamePhase.CAPTIONING) {
-          const uniquePlayerSubmissions = new Set(data.submissions.map((s: any) => s.playerId));
-          
-          if (uniquePlayerSubmissions.size === gameState.players.length) {
-            console.log("כולם סיימו! מסנן כפילויות ושולח לשיפוט...");
-            
-            // לוקחים רק כיתוב אחד לכל שחקן (למקרה של באג רשת)
-            const finalizedSubmissions = gameState.players.map(p => 
-              data.submissions.find((s: any) => s.playerId === p.id)
-            ).filter(Boolean);
+        // לוגיקת המארח - בדיקה שכולם שלחו (פעם אחת בלבד)
+        if (gameState.isHost && gameState.phase === GamePhase.CAPTIONING && data.submissions?.length === gameState.players.length) {
+          const finalizedSubmissions = gameState.players.map(p =>
+            data.submissions.find((s: any) => s.playerId === p.id)
+          ).filter(Boolean);
 
-            // הפעלת השיפוט
-            handleSubmitCaptions(finalizedSubmissions);
-          }
+          handleSubmitCaptions(finalizedSubmissions);
         }
-      }
-    });
-  }
+      });
+    }
+    return () => unsubscribe();
+  }, [gameState.phase, gameState.roomCode, gameState.isHost, gameState.players.length]);
 
-  return () => unsubscribe();
-}, [gameState.phase, gameState.roomCode, gameState.isHost, gameState.players.length]);
+  const handleSubmitSingleCaption = async (caption: string) => {
+    if (!gameState.roomCode || !gameState.currentPlayerId) return;
+    updatePhase(GamePhase.JUDGING);
+    try {
+      await updateDoc(doc(db, "games", gameState.roomCode), {
+        submissions: arrayUnion({
+          playerId: gameState.currentPlayerId,
+          caption: caption
+        })
+      });
+    } catch (e) {
+      console.error(e);
+      alert("שגיאה בשליחה");
+      updatePhase(GamePhase.CAPTIONING);
+    }
+  };
 
-const handleSubmitSingleCaption = async (caption: string) => {
-  if (!gameState.roomCode || !gameState.currentPlayerId) return;
-  setGameState(prev => ({
-    ...prev,
-    phase: GamePhase.JUDGING // מעביר את השחקן למסך המתנה (JudgingPhase)
-  }));
-  try {
-    const roomRef = doc(db, "games", gameState.roomCode);
-  
-  // הוספת הכיתוב של השחקן הספציפי למערך ב-Firebase
-    await updateDoc(roomRef, {
-      submissions: arrayUnion({
-        playerId: gameState.currentPlayerId,
-        caption: caption
-      })
-  });
-} catch (e) {
-  console.error("Error submitting caption:", e);
-    // אופציונלי: במקרה של שגיאה אמיתית, אפשר להחזיר אותו לנסות שוב
-    alert("שגיאה בשליחה, נסה שוב");
-    setGameState(prev => ({ ...prev, phase: GamePhase.CAPTIONING }));
-  }
-    // אופציונלי: אם השליחה נכשלה, להחזיר אותו לכתיבה
-    // setGameState(prev => ({ ...prev, phase: GamePhase.CAPTIONING }));
-  // ניתן להעביר את השחקן למסך המתנה עד שכולם יסיימו 
-};
-
-  return (
+return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-pink-500 selection:text-white">
       {gameState.phase !== GamePhase.LOBBY && (
         <header className="glass-panel border-b border-white/5 p-4 sticky top-0 z-50 shadow-lg">
@@ -262,21 +235,21 @@ const handleSubmitSingleCaption = async (caption: string) => {
             <div className="flex flex-col items-center justify-center min-h-[400px]">
               {gameState.isHost ? (
                 <div className="text-center space-y-6">
-                <h2 className="text-2xl font-bold text-white">התמונה עלתה בהצלחה!</h2>
-                <img
-                  src={`data:image/jpeg;base64,${image}`}
-                  alt="uploaded meme"
-                  className="max-w-lg rounded-xl shadow-lg border-4 border-pink-500"
-                />
-                <p className="text-zinc-400">המתן שכל השחקנים יצטרפו לשלב הכתיבה...</p>
-              </div>
+                  <h2 className="text-2xl font-bold text-white">התמונה עלתה בהצלחה!</h2>
+                  <img
+                    src={`data:image/jpeg;base64,${image}`}
+                    alt="uploaded meme"
+                    className="max-w-lg rounded-xl shadow-lg border-4 border-pink-500"
+                  />
+                  <p className="text-zinc-400">המתן שכל השחקנים יצטרפו לשלב הכתיבה...</p>
+                </div>
               ) : (
-              <div className="text-center">
-                <h1 className="text-6xl font-bold text-white animate-pulse">
-                  {gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || "שחקן"}
-                </h1>
-                <p className="text-pink-200 mt-4 text-2xl font-bold">המארח מכין את הממים... ⏳</p>
-              </div>
+                <div className="text-center">
+                  <h1 className="text-6xl font-bold text-white">
+                    {gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || "שחקן"}
+                  </h1>
+                  <p className="text-pink-200 mt-4 text-2xl font-bold">המארח מכין את הממים... ⏳</p>
+                </div>
               )}
             </div>
           ) : (
@@ -302,9 +275,9 @@ const handleSubmitSingleCaption = async (caption: string) => {
           <JudgingPhase personality={gameState.judgePersonality} />
         )}
         
-        {gameState.phase === GamePhase.RESULTS && gameState.currentImageBase64 && (
+        {gameState.phase === GamePhase.RESULTS && (gameState.currentImageBase64 || image) && (
           <ResultsPhase 
-            imageSrc={gameState.currentImageBase64}
+            imageSrc={gameState.currentImageBase64 || `data:image/jpeg;base64,${image}`}
             results={gameState.judgments}
             players={gameState.players}
             onNextRound={handleNextRound}
@@ -313,6 +286,5 @@ const handleSubmitSingleCaption = async (caption: string) => {
       </main>
     </div>
   );
-};
-
+}
 export default App;
