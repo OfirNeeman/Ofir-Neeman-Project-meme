@@ -151,7 +151,7 @@ def get_image_base64(room_code):
     return jsonify({
         "status": "success",
         "image": encoded
-    }), 200
+    })
 
 if __name__ == "__main__":
     init_uploads_dir()

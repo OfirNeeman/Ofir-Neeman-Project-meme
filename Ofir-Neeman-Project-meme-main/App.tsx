@@ -9,7 +9,7 @@ import { judgeMemes } from './services/geminiService';
 import { Icons } from './components/ui/Icons';
 import { useEffect } from 'react';
 import { db } from './firebase'; 
-import { doc, updateDoc, onSnapshot } from "firebase/firestore"; // הוסף את אלו
+import { doc, updateDoc, onSnapshot, arrayUnion } from "firebase/firestore"
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -170,12 +170,34 @@ useEffect(() => {
             console.error("Error fetching image for player:", e);
           }
         }
+        if (gameState.isHost && data.submissions && data.submissions.length === gameState.players.length && gameState.phase === GamePhase.CAPTIONING) {
+          console.log("כולם סיימו! שולח לשיפוט...");
+          // הפעלת פונקציית השיפוט עם כל הנתונים שנאספו מ-Firebase
+          handleSubmitCaptions(data.submissions);
+        }
       }
     });
   }
 
   return () => unsubscribe();
 }, [gameState.phase, gameState.roomCode, gameState.isHost]); // הוספנו את isHost לרשימת התלות
+
+const handleSubmitSingleCaption = async (caption: string) => {
+  if (!gameState.roomCode || !gameState.currentPlayerId) return;
+
+  const roomRef = doc(db, "games", gameState.roomCode);
+  
+  // הוספת הכיתוב של השחקן הספציפי למערך ב-Firebase
+  await updateDoc(roomRef, {
+    submissions: arrayUnion({
+      playerId: gameState.currentPlayerId,
+      caption: caption
+    })
+  });
+
+  // ניתן להעביר את השחקן למסך המתנה עד שכולם יסיימו
+  updatePhase(GamePhase.JUDGING); 
+};
 
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-pink-500 selection:text-white">
@@ -218,19 +240,22 @@ useEffect(() => {
           hostFinishedUpload ? (
             <div className="flex flex-col items-center justify-center min-h-[400px]">
               {gameState.isHost ? (
-                <h1><img
-                src={`data:image/jpeg;base64,${image}`}
-                alt="uploaded meme"
-                className="max-w-lg rounded-xl shadow-lg"
-              /></h1>
+                <div className="text-center space-y-6">
+                <h2 className="text-2xl font-bold text-white">התמונה עלתה בהצלחה!</h2>
+                <img
+                  src={`data:image/jpeg;base64,${image}`}
+                  alt="uploaded meme"
+                  className="max-w-lg rounded-xl shadow-lg border-4 border-pink-500"
+                />
+                <p className="text-zinc-400">המתן שכל השחקנים יצטרפו לשלב הכתיבה...</p>
+              </div>
               ) : (
-                <div className="text-center">
-                  {/* ניסיון למצוא את השם של השחקן הנוכחי מתוך הרשימה */}
-                  <h1 className="text-6xl font-bold text-white animate-pulse">
-                    {gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || "שחקן"}
-                  </h1>
-                  <p className="text-pink-200 mt-4 text-2xl font-bold">המארח מכין את הממים... ⏳</p>
-                </div>
+              <div className="text-center">
+                <h1 className="text-6xl font-bold text-white animate-pulse">
+                  {gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || "שחקן"}
+                </h1>
+                <p className="text-pink-200 mt-4 text-2xl font-bold">המארח מכין את הממים... ⏳</p>
+              </div>
               )}
             </div>
           ) : (
@@ -243,11 +268,12 @@ useEffect(() => {
           )
         )}
               
-        {gameState.phase === GamePhase.CAPTIONING && gameState.currentImageBase64 && (
+        {gameState.phase === GamePhase.CAPTIONING && (gameState.currentImageBase64 || image) && (
           <CaptioningPhase 
-            imageSrc={gameState.currentImageBase64} 
-            players={gameState.players}
-            onSubmitCaptions={handleSubmitCaptions}
+            imageSrc={gameState.isHost ? `data:image/jpeg;base64,${image}` : (gameState.currentImageBase64 || "")} 
+            playerId={gameState.currentPlayerId!} 
+            playerName={gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || ""}
+            onSubmitCaption={handleSubmitSingleCaption}
           />
         )}
         
