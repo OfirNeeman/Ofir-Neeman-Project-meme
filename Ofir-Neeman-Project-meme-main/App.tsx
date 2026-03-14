@@ -293,7 +293,7 @@ return (
         )}
         
         {gameState.phase === GamePhase.JUDGING && (
-          <JudgingPhase personality={gameState.judgePersonality} />
+          <JudgingPhase/>
         )}
         
         {gameState.phase === GamePhase.RESULTS && (gameState.currentImageBase64 || image) && (

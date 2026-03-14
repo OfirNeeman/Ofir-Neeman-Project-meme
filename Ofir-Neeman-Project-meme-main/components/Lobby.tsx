@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { JudgePersonality, Player, GameState } from '../types';
-import { JUDGE_DESCRIPTIONS, MIN_PLAYERS } from '../constants';
+import {MIN_PLAYERS } from '../constants';
 import { Button } from './ui/Button';
 import { Icons } from './ui/Icons';
 import { db } from '../firebase'; 
