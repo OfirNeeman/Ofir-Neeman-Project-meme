@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 import { AIJudgmentResult, Player } from '../../types';
 import { Button } from '../ui/Button';
 import { Icons } from '../ui/Icons';
+//import { console } from 'inspector/promises';
 
 interface ResultsPhaseProps {
   imageSrc: string;
   results: AIJudgmentResult[];
   players: Player[];
+  submissions: any[];
   onNextRound: () => void;
 }
 
-export const ResultsPhase: React.FC<ResultsPhaseProps> = ({ imageSrc, results, players, onNextRound }) => {
+export const ResultsPhase: React.FC<ResultsPhaseProps> = ({ imageSrc, results, players, submissions, onNextRound }) => {
   const [revealedCount, setRevealedCount] = useState(0);
 
   // Sort results by total score descending
@@ -45,8 +47,13 @@ export const ResultsPhase: React.FC<ResultsPhaseProps> = ({ imageSrc, results, p
 
       <div className="grid gap-12">
         {sortedResults.slice(0, revealedCount + 1).map((result, index) => {
+          const playerSubmission = submissions.find(s => String(s.playerId).trim() === String(result.playerId).trim());
+          //const playerSubmission = submissions.find(s => s.playerId === result.playerId);
           const player = getPlayer(result.playerId);
           const isWinner = index === 0 && revealedCount === sortedResults.length - 1;
+
+          console.log("Submissions received:", submissions);
+          console.log("Looking for playerId:", result.playerId);
 
           return (
             <div 
@@ -64,7 +71,8 @@ export const ResultsPhase: React.FC<ResultsPhaseProps> = ({ imageSrc, results, p
                              <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/10 inline-block mb-3">
                                 <Icons.Message className="w-8 h-8 text-white mx-auto" />
                              </div>
-                             <p className="text-white text-lg font-medium">הכיתוב של השחקן</p>
+                             <p className="text-white text-3xl font-black uppercase tracking-tight drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] text-center break-words max-w-full px-4">
+                              {playerSubmission?.caption || "אין כיתוב"}</p>
                              {/* In a real scenario we would map the caption here */}
                         </div>
                     </div>

@@ -147,6 +147,11 @@ const App: React.FC = () => {
       unsubscribe = onSnapshot(doc(db, "games", gameState.roomCode), async (docSnap) => {
         if (!docSnap.exists()) return;
         const data = docSnap.data();
+        setGameState(prev => ({
+        ...prev,
+        players: data.players || [],
+        submissions: data.submissions || [] // זה מה שיגרום לכיתובים להופיע!
+      }));
 
         // מעבר שלב לשחקנים
         if (data.status === 'HOST_FINISHED_UPLOAD' && !gameState.isHost && gameState.phase === GamePhase.UPLOAD) {
@@ -301,6 +306,7 @@ return (
             imageSrc={gameState.currentImageBase64 || `data:image/jpeg;base64,${image}`}
             results={gameState.judgments}
             players={gameState.players}
+            submissions={gameState.submissions}
             onNextRound={handleNextRound}
           />
         )}
