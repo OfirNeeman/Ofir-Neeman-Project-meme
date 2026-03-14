@@ -19,7 +19,7 @@ env_path = Path('server') / 'server.env'
 load_dotenv(dotenv_path=env_path)
 
 GIPHY_API_KEY = os.getenv("GIPHY_API_KEY")
-
+room_image_index = {}
 PORT = 4000
 UPLOADS_DIR = 'uploads'
 # בדיקה קריטית - אם זה מדפיס None, המפתח עדיין לא נטען
@@ -152,6 +152,47 @@ def get_image_base64(room_code):
         "status": "success",
         "image": encoded
     })
+
+@app.route('/next_image/<room_code>', methods=['GET'])
+def get_next_image(room_code):
+    # הנתיב לתיקיית התמונות של החדר הספציפי
+    room_folder = os.path.join('uploads', room_code)
+    
+    if not os.path.exists(room_folder):
+        return jsonify({"error": "Room folder not found"}), 404
+
+    # רשימת כל הקבצים בתיקייה (מסונן רק לתמונות)
+    images = sorted([f for f in os.listdir(room_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))])
+
+    if not images:
+        return jsonify({"error": "No images in room"}), 404
+
+    # עדכון האינדקס עבור החדר
+    current_index = room_image_index.get(room_code, 0)
+    
+    # אם הגענו לסוף הרשימה, חוזרים להתחלה (או עוצרים, לפי בחירתך)
+    if current_index >= len(images):
+        current_index = 0
+    
+    image_name = images[current_index]
+    image_path = os.path.join(room_folder, image_name)
+
+    # עדכון האינדקס לסיבוב הבא
+    room_image_index[room_code] = current_index + 1
+
+    # המרת התמונה ל-Base64
+    try:
+        with open(image_path, "rb") as img_file:
+            encoded_string = base64.b64encode(img_file.read()).decode('utf-8')
+        
+        return jsonify({
+            "image": encoded_string,
+            "image_name": image_name,
+            "current_round": current_index + 1,
+            "total_images": len(images)
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     init_uploads_dir()

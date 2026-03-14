@@ -108,24 +108,47 @@ const App: React.FC = () => {
     }
   };
 
-  const handleNextRound = async () => {
-    if (gameState.isHost && gameState.roomCode) {
+const handleNextRound = async () => {
+  if (gameState.isHost && gameState.roomCode) {
+    try {
+      const SERVER_IP = "192.168.1.149";
+      
+      // משוך את התמונה הבאה מהשרת
+      const response = await fetch(`http://${SERVER_IP}:4000/next_image/${gameState.roomCode}`);
+      const data = await response.json();
+
+      if (data.image) {
+        // עדכון ה-DB: אנחנו מעדכנים ל-HOST_FINISHED_UPLOAD כדי שכולם יראו את התמונה מיד
         await updateDoc(doc(db, "games", gameState.roomCode), {
-            submissions: [],
-            status: 'WAITING_FOR_UPLOAD'
+          submissions: [],
+          judgments: [],
+          status: 'HOST_FINISHED_UPLOAD' 
         });
+
+        // שמירת התמונה החדשה ב-State
+        setImage(data.image);
+        setHostFinishedUpload(true); // המארח סיים "להעלות" (כי התמונה הגיעה מהשרת)
+        updatePhase(GamePhase.CAPTIONING); // מעבר ישיר לשלב הכתיבה
+        
+        return; // יוצאים מהפונקציה כדי לא להמשיך לאיפוס למטה
+      }
+    } catch (e) {
+      console.error("Error fetching next image:", e);
     }
-    setGameState(prev => ({
-      ...prev,
-      currentImageBase64: null,
-      submissions: [],
-      judgments: [],
-      roundsPlayed: prev.roundsPlayed + 1,
-      phase: GamePhase.UPLOAD
-    }));
-    setImage(null);
-    setHostFinishedUpload(false);
-  };
+  }
+
+  // Fallback למקרה שמשהו נכשל או אם זה לא המארח
+  setGameState(prev => ({
+    ...prev,
+    currentImageBase64: null,
+    submissions: [],
+    judgments: [],
+    roundsPlayed: prev.roundsPlayed + 1,
+    phase: GamePhase.UPLOAD
+  }));
+  setImage(null);
+  setHostFinishedUpload(false);
+};
 
   const callViaSocket = async (action: string, data: any) => {
     try {
