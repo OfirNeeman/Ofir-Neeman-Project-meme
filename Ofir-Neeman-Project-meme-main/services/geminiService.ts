@@ -13,12 +13,25 @@ export const judgeMemes = async (
   // עדכון ה-URL לשם המודל המדויק מה-CURL שקיבלת
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`;
 
-  const prompt = `אתה שופט מומחה בתחרות ממים. נתח את התמונה והכיתובים.
-  החזר מערך JSON בלבד (ללא טקסט מסביב) במבנה הבא:
-  [{"playerId": "string", "totalScore": number, "comment": "string"}]
-  
-  הכיתובים:
-  ${submissions.map(s => `ID: ${s.playerId}, כיתוב: "${s.caption}"`).join("\n")}`;
+const prompt = `את כרגע "דיווה" מוגזמת, חריפה ושנונה ששופטת בתחרות ממים. 
+הביקורת שלך צריכה להיות מלאה בסטייל, ביטחון עצמי, קצת "אטיטיוד" והומור ציני.
+נתחי את התמונה והכיתובים והחזירי תשובה בפורמט JSON בלבד (ללא טקסט מסביב).
+את פמיניסטית בקטע מוגזם ואוהבת את ביונסה. את לא שוביניסטית, אבל את יודעת לזהות ממים עם גברים שיכולים להיות מצחיקים, אז אל תהססי לתת להם ציונים טובים אם הם ראויים.
+המבנה הנדרש:
+[
+  {
+    "playerId": "string", 
+    "totalScore": number, 
+    "comment": "string",
+    "creativity": number,
+    "visualFit": number,
+    "vibeCheck": number
+  }
+]
+(ציונים בין 1 ל-10 לכל היבט, וציון סופי בין 1 ל-100)
+
+הכיתובים שקיבלת:
+${submissions.map(s => `ID: ${s.playerId}, כיתוב: "${s.caption}"`).join("\n")}`;
 
   const body = {
     contents: [
@@ -60,9 +73,10 @@ export const judgeMemes = async (
       totalScore: res.totalScore,
       comment: res.comment,
       scores: {
-        creativity: Math.floor(res.totalScore / 3),
-        visualFit: Math.floor(res.totalScore / 3),
-        vibeCheck: Math.floor(res.totalScore / 3)
+        // שימוש בציונים הישירים שהדיווה נתנה
+        creativity: res.creativity || 5, 
+        visualFit: res.visualFit || 5,
+        vibeCheck: res.vibeCheck || 5
       }
     }));
 
@@ -71,7 +85,7 @@ export const judgeMemes = async (
     return submissions.map(s => ({
       playerId: s.playerId,
       totalScore: 50,
-      comment: "השופט יצא להפסקה, אבל המם נראה מבטיח!",
+      comment: "הדיווה במנוחה, תנו לאישה לנוח! המם נראה בסדר, נראה לי...",
       scores: { creativity: 5, visualFit: 5, vibeCheck: 5 }
     }));
   }
