@@ -95,6 +95,14 @@ const App: React.FC = () => {
         return playerResult ? { ...p, score: p.score + playerResult.totalScore } : p;
       });
 
+      if (gameState.roomCode) {
+      await updateDoc(doc(db, "games", gameState.roomCode), {
+        players: updatedPlayers,
+        status: 'JUDGING_FINISHED',
+        results: results
+      });
+    }
+
       setGameState(prev => ({
         ...prev,
         players: updatedPlayers,
@@ -113,38 +121,49 @@ const handleNextRound = async () => {
     try {
       const SERVER_IP = "192.168.1.149";
       
-      // משוך את התמונה הבאה מהשרת
+      // 1. משוך את התמונה הבאה מהשרת הפרטי
       const response = await fetch(`http://${SERVER_IP}:4000/next_image/${gameState.roomCode}`);
       const data = await response.json();
 
       if (data.image) {
-        // עדכון ה-DB: אנחנו מעדכנים ל-HOST_FINISHED_UPLOAD כדי שכולם יראו את התמונה מיד
+        // 2. עדכון ה-Firebase: המארח מעלה את ה-Base64 החדש ל-DB
+        // זה מה שיגרום לכל השחקנים לראות את התמונה החדשה ב-useEffect שלהם
         await updateDoc(doc(db, "games", gameState.roomCode), {
           submissions: [],
-          judgments: [],
-          status: 'HOST_FINISHED_UPLOAD' 
+          status: 'HOST_FINISHED_UPLOAD',
+          currentImageBase64: data.image // מעדכנים את התמונה ב-DB!
         });
 
-        // שמירת התמונה החדשה ב-State
+        // 3. עדכון מקומי אצל המארח
         setImage(data.image);
-        setHostFinishedUpload(true); // המארח סיים "להעלות" (כי התמונה הגיעה מהשרת)
-        updatePhase(GamePhase.CAPTIONING); // מעבר ישיר לשלב הכתיבה
+        setHostFinishedUpload(true);
         
-        return; // יוצאים מהפונקציה כדי לא להמשיך לאיפוס למטה
+        setGameState(prev => ({
+          ...prev,
+          currentImageBase64: data.image,
+          submissions: [],
+          judgments: [],
+          roundsPlayed: prev.roundsPlayed + 1,
+          phase: GamePhase.CAPTIONING,
+          players: prev.players // שמירה על הניקוד המצטבר
+        }));
+        
+        return; 
       }
     } catch (e) {
       console.error("Error fetching next image:", e);
     }
   }
 
-  // Fallback למקרה שמשהו נכשל או אם זה לא המארח
+  // Fallback (אם השרת נפל או זה לא המארח)
   setGameState(prev => ({
     ...prev,
     currentImageBase64: null,
     submissions: [],
     judgments: [],
     roundsPlayed: prev.roundsPlayed + 1,
-    phase: GamePhase.UPLOAD
+    phase: GamePhase.UPLOAD,
+    players: prev.players
   }));
   setImage(null);
   setHostFinishedUpload(false);
