@@ -128,10 +128,10 @@ const handleNextRound = async () => {
       if (data.image) {
         // 2. עדכון ה-Firebase: המארח מעלה את ה-Base64 החדש ל-DB
         // זה מה שיגרום לכל השחקנים לראות את התמונה החדשה ב-useEffect שלהם
-        await updateDoc(doc(db, "games", gameState.roomCode), {
+          await updateDoc(doc(db, "games", gameState.roomCode), {
           submissions: [],
           status: 'HOST_FINISHED_UPLOAD',
-          currentImageBase64: data.image // מעדכנים את התמונה ב-DB!
+          lastImageUpdate: Date.now()// מעדכנים את התמונה ב-DB!
         });
 
         // 3. עדכון מקומי אצל המארח
