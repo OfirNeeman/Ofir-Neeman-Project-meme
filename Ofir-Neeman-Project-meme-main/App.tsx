@@ -201,13 +201,17 @@ const handleNextRound = async () => {
             const SERVER_IP = "192.168.1.149";
             const response = await fetch(`http://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`);
             const imageData = await response.json();
-            setGameState(prev => ({
-              ...prev,
-              currentImageBase64: imageData.image,
-              phase: GamePhase.CAPTIONING
-            }));
-            setHostFinishedUpload(true);
-          } catch (e) { console.error(e); }
+              if (imageData.image && imageData.image !== gameState.currentImageBase64) {
+              setGameState(prev => ({
+                ...prev,
+                currentImageBase64: imageData.image,
+                phase: GamePhase.CAPTIONING
+              }));
+              setHostFinishedUpload(true);
+            } 
+          } catch (e) {
+          console.error("Failed to fetch image from server:", e);
+        }
         }
 
         // לוגיקת המארח - בדיקה שכולם שלחו (פעם אחת בלבד)
