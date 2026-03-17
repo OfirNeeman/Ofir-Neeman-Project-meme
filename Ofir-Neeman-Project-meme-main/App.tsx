@@ -335,7 +335,7 @@ return (
             </div>
           ) : (
           <CaptioningPhase 
-            imageSrc={gameState.isHost ? `data:image/jpeg;base64,${image}` : (gameState.currentImageBase64 || "")} 
+            //imageSrc={gameState.isHost ? `data:image/jpeg;base64,${image}` : (gameState.currentImageBase64 || "")} 
             playerId={gameState.currentPlayerId!} 
             playerName={gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || ""}
             onSubmitCaption={handleSubmitSingleCaption}
