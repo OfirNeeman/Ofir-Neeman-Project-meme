@@ -199,7 +199,8 @@ useEffect(() => {
       setGameState(prev => ({
         ...prev,
         players: data.players || [],
-        submissions: data.submissions || []
+        submissions: data.submissions || [],
+        roundsPlayed: data.roundsPlayed !== undefined ? data.roundsPlayed : prev.roundsPlayed
       }));
 
       // 2. מעבר לשלב התוצאות (Results) - רק כשהמארח מעדכן שהשיפוט הסתיים
@@ -380,11 +381,11 @@ return (
           />
           )
         )}
-        
-        {gameState.phase === GamePhase.JUDGING && (
-          gameState.isHost ? (
-            <JudgingPhase />
-          ) : (
+      {gameState.phase === GamePhase.JUDGING && (
+        gameState.isHost ? (
+          <JudgingPhase />
+        ) : (
+          gameState.judgments.length > 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8 animate-in fade-in zoom-in duration-500">
               <div className="relative">
                 <div className="absolute -inset-4 bg-pink-500 blur-2xl opacity-20 animate-pulse rounded-full"></div>
@@ -404,8 +405,11 @@ return (
                 <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce"></div>
               </div>
             </div>
+          ) : (
+            <JudgingPhase />
           )
-        )}
+        )
+      )}
         
         {gameState.phase === GamePhase.RESULTS && (gameState.currentImageBase64 || image) && (
           <ResultsPhase 
