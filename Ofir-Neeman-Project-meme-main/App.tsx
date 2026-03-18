@@ -203,13 +203,19 @@ useEffect(() => {
       }));
 
       // 2. מעבר לשלב התוצאות (Results) - רק כשהמארח מעדכן שהשיפוט הסתיים
-      if (data.status === 'JUDGING_FINISHED' && gameState.phase !== GamePhase.RESULTS) {
-        setGameState(prev => ({
-          ...prev,
-          judgments: data.results || [],
-          phase: GamePhase.RESULTS
-        }));
-      }
+      if (data.status == 'JUDGING_FINISHED' && gameState.phase !== GamePhase.RESULTS) {
+        if (gameState.isHost) {
+          setGameState(prev => ({
+            ...prev,
+            judgments: data.results || [],
+            phase: GamePhase.RESULTS
+          }));
+        } else { setGameState(prev => ({
+      ...prev,
+      judgments: data.results || []
+    }));
+  }
+}
 
       // 3. לוגיקת מעבר שלב (קורה בסיבוב ראשון או בלחיצה על "סיבוב חדש")
       const isStartingNextRound = data.status === 'START_NEXT_ROUND';
@@ -376,7 +382,29 @@ return (
         )}
         
         {gameState.phase === GamePhase.JUDGING && (
-          <JudgingPhase/>
+          gameState.isHost ? (
+            <JudgingPhase />
+          ) : (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8 animate-in fade-in zoom-in duration-500">
+              <div className="relative">
+                <div className="absolute -inset-4 bg-pink-500 blur-2xl opacity-20 animate-pulse rounded-full"></div>
+                <Icons.Trophy className="w-24 h-24 text-yellow-400 relative z-10 mx-auto" />
+              </div>
+              <div className="space-y-4">
+                <h2 className="text-5xl font-black text-white italic tracking-tight">
+                  התוצאות על המסך! 🏆
+                </h2>
+                <p className="text-pink-200 text-xl font-bold opacity-80">
+                  הסתכלו על המסך הראשי כדי לראות מי ניצח בסיבוב...
+                </p>
+              </div>
+              <div className="flex gap-2 justify-center">
+                <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce"></div>
+              </div>
+            </div>
+          )
         )}
         
         {gameState.phase === GamePhase.RESULTS && (gameState.currentImageBase64 || image) && (
