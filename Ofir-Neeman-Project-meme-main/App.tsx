@@ -130,7 +130,7 @@ const handleNextRound = async () => {
         // זה מה שיגרום לכל השחקנים לראות את התמונה החדשה ב-useEffect שלהם
           await updateDoc(doc(db, "games", gameState.roomCode), {
           submissions: [],
-          status: 'HOST_FINISHED_UPLOAD',
+          status: 'START_NEXT_ROUND',
           lastImageUpdate: Date.now()// מעדכנים את התמונה ב-DB!
         });
 
@@ -148,6 +148,11 @@ const handleNextRound = async () => {
           players: prev.players // שמירה על הניקוד המצטבר
         }));
         
+        setTimeout(async () => {
+          await updateDoc(doc(db, "games", gameState.roomCode!), {
+            status: 'PLAYING'
+          });
+        }, 2000);
         return; 
       }
     } catch (e) {
@@ -182,50 +187,77 @@ const handleNextRound = async () => {
     }
   };
 
-  useEffect(() => {
-    let unsubscribe = () => {};
+useEffect(() => {
+  let unsubscribe = () => {};
 
-    if (gameState.phase !== GamePhase.LOBBY && gameState.roomCode) {
-      unsubscribe = onSnapshot(doc(db, "games", gameState.roomCode), async (docSnap) => {
-        if (!docSnap.exists()) return;
-        const data = docSnap.data();
-        setGameState(prev => ({
+  if (gameState.phase !== GamePhase.LOBBY && gameState.roomCode) {
+    unsubscribe = onSnapshot(doc(db, "games", gameState.roomCode), async (docSnap) => {
+      if (!docSnap.exists()) return;
+      const data = docSnap.data();
+
+      // 1. עדכון בסיסי של שחקנים וכיתובים
+      setGameState(prev => ({
         ...prev,
         players: data.players || [],
-        submissions: data.submissions || [] // זה מה שיגרום לכיתובים להופיע!
+        submissions: data.submissions || []
       }));
 
-        // מעבר שלב לשחקנים
-        if (data.status === 'HOST_FINISHED_UPLOAD' && !gameState.isHost && gameState.phase === GamePhase.UPLOAD) {
-          try {
-            const SERVER_IP = "192.168.1.149";
+      // 2. מעבר לשלב התוצאות (Results) - רק כשהמארח מעדכן שהשיפוט הסתיים
+      if (data.status === 'JUDGING_FINISHED' && gameState.phase !== GamePhase.RESULTS) {
+        setGameState(prev => ({
+          ...prev,
+          judgments: data.results || [],
+          phase: GamePhase.RESULTS
+        }));
+      }
+
+      // 3. לוגיקת מעבר שלב (קורה בסיבוב ראשון או בלחיצה על "סיבוב חדש")
+      const isStartingNextRound = data.status === 'START_NEXT_ROUND';
+      const isFirstUpload = data.status === 'HOST_FINISHED_UPLOAD' && gameState.phase === GamePhase.UPLOAD;
+
+      if (!gameState.isHost && (isStartingNextRound || isFirstUpload)) {
+        try {
+          const SERVER_IP = "192.168.1.149";
+          
+          // מושכים תמונה רק אם אנחנו צריכים לעבור ל-Captioning
+          if (gameState.phase !== GamePhase.CAPTIONING || isStartingNextRound) {
             const response = await fetch(`http://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`);
             const imageData = await response.json();
-              if (imageData.image && imageData.image !== gameState.currentImageBase64) {
+
+            if (imageData.image) {
               setGameState(prev => ({
                 ...prev,
                 currentImageBase64: imageData.image,
-                phase: GamePhase.CAPTIONING
+                phase: GamePhase.CAPTIONING,
+                submissions: [], // ניקוי כיתובים ישנים
+                judgments: [],   // ניקוי שיפוטים ישנים
+                roundsPlayed: data.roundsPlayed || prev.roundsPlayed
               }));
               setHostFinishedUpload(true);
-            } 
-          } catch (e) {
-          console.error("Failed to fetch image from server:", e);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch image:", e);
         }
-        }
+      }
 
-        // לוגיקת המארח - בדיקה שכולם שלחו (פעם אחת בלבד)
-        if (gameState.isHost && gameState.phase === GamePhase.CAPTIONING && data.submissions?.length === gameState.players.length) {
-          const finalizedSubmissions = gameState.players.map(p =>
-            data.submissions.find((s: any) => s.playerId === p.id)
-          ).filter(Boolean);
+      // 4. לוגיקת המארח - הפעלת שיפוט Gemini כשכולם שלחו
+      if (gameState.isHost && gameState.phase === GamePhase.CAPTIONING && 
+          data.submissions?.length === gameState.players.length && gameState.players.length > 0) {
+        
+        const finalizedSubmissions = gameState.players.map(p =>
+          data.submissions.find((s: any) => s.playerId === p.id)
+        ).filter(Boolean);
 
+        if (finalizedSubmissions.length === gameState.players.length) {
           handleSubmitCaptions(finalizedSubmissions);
         }
-      });
-    }
-    return () => unsubscribe();
-  }, [gameState.phase, gameState.roomCode, gameState.isHost, gameState.players.length]);
+      } 
+    });
+  }
+  return () => unsubscribe();
+}, [gameState.phase, gameState.roomCode, gameState.isHost, gameState.players.length]);
+
 
   const handleSubmitSingleCaption = async (caption: string) => {
     if (!gameState.roomCode || !gameState.currentPlayerId) return;

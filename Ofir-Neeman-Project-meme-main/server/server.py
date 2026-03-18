@@ -155,32 +155,31 @@ def get_image_base64(room_code):
 
 @app.route('/next_image/<room_code>', methods=['GET'])
 def get_next_image(room_code):
-    # הנתיב לתיקיית התמונות של החדר הספציפי
-    room_folder = os.path.join('uploads', room_code)
-    
+    room_folder = os.path.join(UPLOADS_DIR, room_code)
     if not os.path.exists(room_folder):
-        return jsonify({"error": "Room folder not found"}), 404
+        return jsonify({"error": "Room not found"}), 404
 
-    # רשימת כל הקבצים בתיקייה (מסונן רק לתמונות)
+    # סינון קבצים
     images = sorted([f for f in os.listdir(room_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))])
-
     if not images:
-        return jsonify({"error": "No images in room"}), 404
+        return jsonify({"error": "No images"}), 404
 
-    # עדכון האינדקס עבור החדר
+    # שליפת האינדקס הנוכחי (ברירת מחדל 0)
     current_index = room_image_index.get(room_code, 0)
     
-    # אם הגענו לסוף הרשימה, חוזרים להתחלה (או עוצרים, לפי בחירתך)
+    # בדיקה שלא חרגנו מהרשימה
     if current_index >= len(images):
-        current_index = 0
-    
+        # אפשרות א': לחזור להתחלה
+        #current_index = 0
+        # אפשרות ב': להחזיר הודעה שהמשחק נגמר
+        return jsonify({"status": "game_over"}), 200
+
     image_name = images[current_index]
     image_path = os.path.join(room_folder, image_name)
 
-    # עדכון האינדקס לסיבוב הבא
+    # עדכון האינדקס לסיבוב הבא בזיכרון השרת
     room_image_index[room_code] = current_index + 1
-     # המרת התמונה ל-Base64
-     
+
     try:
         with open(image_path, "rb") as img_file:
             encoded_string = base64.b64encode(img_file.read()).decode('utf-8')
