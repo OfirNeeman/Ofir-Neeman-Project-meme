@@ -9,72 +9,68 @@ interface WinnerPhaseProps {
 }
 
 export const WinnerPhase: React.FC<WinnerPhaseProps> = ({ players, onRestart }) => {
-  // מיון לפי ניקוד
+  // 1. מיון השחקנים לפי ניקוד מהגבוה לנמוך
   const sorted = [...players].sort((a, b) => b.score - a.score);
-
-  const top3 = sorted.slice(0, 3);
-  const rest = sorted.slice(3);
-
-  const podiumOrder = [1, 0, 2]; // כדי שהמקום הראשון באמצע
+  
+  // 2. מציאת הניקוד הגבוה ביותר
+  const highScore = sorted[0]?.score || 0;
+  
+  // 3. סינון כל השחקנים שיש להם את הניקוד הזה (הזוכים)
+  const winners = sorted.filter(p => p.score === highScore && highScore > 0);
+  
+  // 4. שאר השחקנים (אלו שלא ניצחו)
+  const others = sorted.filter(p => p.score !== highScore);
 
   return (
-    <div className="max-w-5xl mx-auto text-center pt-12 pb-24">
-      <h1 className="text-6xl font-black text-white mb-16">
-        🏆 המנצחים 🏆
+    <div className="max-w-5xl mx-auto text-center pt-12 pb-24 px-4">
+      {/* כותרת משתנה לפי כמות המנצחים */}
+      <h1 className="text-6xl font-black text-white mb-8 animate-bounce">
+        {winners.length > 1 ? "🤝 יש לנו תיקו! 🤝" : "🏆 המנצח הגדול 🏆"}
       </h1>
 
-      {/* פודיום */}
-      <div className="flex justify-center items-end gap-6 mb-20">
-        {podiumOrder.map((pos, i) => {
-          const player = top3[pos];
-          if (!player) return null;
-
-          const heights = ["h-40", "h-56", "h-32"]; // 2nd, 1st, 3rd
-          const medals = ["🥈", "🥇", "🥉"];
-
-          return (
-            <div key={player.id} className="flex flex-col items-center">
-              <div className="mb-4 text-4xl">{medals[i]}</div>
-
-              <div className={`w-28 ${heights[i]} bg-gradient-to-t from-pink-500 to-purple-500 rounded-2xl flex flex-col justify-end items-center pb-4 shadow-xl`}>
-                <div className={`p-3 rounded-xl ${player.avatar} mb-2`}>
-                  <Icons.User className="w-6 h-6 text-white" />
-                </div>
-
-                <span className="text-white font-black text-lg">
-                  {player.name}
-                </span>
-
-                <span className="text-white text-sm opacity-80">
-                  {player.score} pts
-                </span>
+      {/* תצוגת המנצחים */}
+      <div className="flex flex-wrap justify-center gap-8 mb-20">
+        {winners.map((player) => (
+          <div key={player.id} className="relative group">
+            {/* אפקט הילה למנצח */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+            
+            <div className="relative flex flex-col items-center bg-zinc-900 border-2 border-yellow-500/50 p-8 rounded-2xl shadow-2xl min-w-[200px]">
+              <div className="text-5xl mb-4">👑</div>
+              <div className={`p-4 rounded-2xl ${player.avatar} mb-4 shadow-inner`}>
+                <Icons.User className="w-10 h-10 text-white" />
               </div>
+              <h2 className="text-2xl font-black text-white mb-1">{player.name}</h2>
+              <p className="text-yellow-400 font-bold text-xl">{player.score} נקודות</p>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
 
-      {/* שאר השחקנים */}
-      {rest.length > 0 && (
-        <div className="bg-zinc-900 rounded-2xl p-6 mb-10">
-          <h2 className="text-xl font-bold text-white mb-4">
-            שאר המשתתפים
-          </h2>
-
-          <div className="space-y-2">
-            {rest.map((p, i) => (
-              <div key={p.id} className="flex justify-between text-zinc-300">
-                <span>{i + 4}. {p.name}</span>
-                <span>{p.score}</span>
+      {/* טבלת שאר הדירוגים */}
+      {others.length > 0 && (
+        <div className="max-w-md mx-auto bg-white/5 backdrop-blur-sm rounded-3xl p-8 mb-12 border border-white/10">
+          <h3 className="text-zinc-400 font-bold uppercase tracking-widest text-sm mb-6">דירוג סופי</h3>
+          <div className="space-y-4">
+            {others.map((p, i) => (
+              <div key={p.id} className="flex justify-between items-center bg-zinc-800/50 p-3 rounded-xl border border-white/5">
+                <div className="flex items-center gap-3">
+                  <span className="text-zinc-500 font-mono w-4">{winners.length + i + 1}.</span>
+                  <span className="text-white font-bold">{p.name}</span>
+                </div>
+                <span className="text-zinc-400 font-medium">{p.score} pts</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <Button onClick={onRestart} size="xl">
-        משחק חדש 🔄
-      </Button>
+      <div className="flex flex-col items-center gap-4">
+        <Button onClick={onRestart} size="xl" className="bg-gradient-to-r from-pink-500 to-purple-600 hover:scale-105 transition-transform px-12">
+          חזרה ללובי הראשי
+        </Button>
+        <p className="text-zinc-500 text-sm italic">המשחק הסתיים ברוח טובה (בתקווה)</p>
+      </div>
     </div>
   );
 };

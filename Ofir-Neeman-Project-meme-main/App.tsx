@@ -491,13 +491,7 @@ return (
       <WinnerPhase 
         players={gameState.players}
         onRestart={() => {
-          setGameState(prev => ({
-            ...prev,
-            phase: GamePhase.LOBBY,
-            roundsPlayed: 0,
-            submissions: [],
-            judgments: []
-          }));
+          window.location.reload();
         }}
       />
     )}
