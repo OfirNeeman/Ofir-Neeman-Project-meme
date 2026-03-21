@@ -26,7 +26,14 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
     'bg-pink-500', 'bg-rose-500', 'bg-fuchsia-500', 'bg-purple-500', 
     'bg-violet-500', 'bg-indigo-500', 'bg-blue-500', 'bg-cyan-500'
   ];
+  const maxLength = 8;
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const value = e.target.value;
+  if (value.length <= maxLength) {
+    setPlayerName(value);
+  }
+};
   useEffect(() => {
     let unsubscribe = () => {};
     
@@ -193,7 +200,10 @@ const handleStart = async () => {
               <h2 className="text-4xl font-black text-white">הצטרפות</h2>
               <div className="space-y-6">
                 <input type="text" placeholder="קוד חדר" value={inputCode} onChange={(e) => setInputCode(e.target.value.toUpperCase())} className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-6 py-5 text-center text-3xl font-black uppercase text-white" maxLength={5} />
-                <input type="text" placeholder="כינוי" value={playerName} onChange={(e) => setPlayerName(e.target.value)} className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-6 py-5 text-center text-2xl font-bold text-white" />
+                <input type="text" placeholder="כינוי" value={playerName} onChange={handleNameChange} maxLength={maxLength} className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-6 py-5 text-center text-2xl font-bold text-white" />
+                <div className="absolute left-4 bottom-2 text-[10px] text-zinc-500 font-bold">
+                    {playerName.length}/{maxLength}
+                  </div>
               </div>
               <Button onClick={handleJoinGame} disabled={!inputCode || !playerName} size="xl" className="w-full">Let's Go!</Button>
             </>

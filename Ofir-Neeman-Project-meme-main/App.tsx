@@ -510,8 +510,10 @@ return (
         )}
         {gameState.phase === GamePhase.GAME_OVER && (
       <WinnerPhase 
-        players={gameState.players} 
-        onRestart={handleRestart}
+    players={gameState.players}
+    isHost={gameState.isHost} // העברת סטטוס המארח
+    currentPlayerId={gameState.currentPlayerId} // העברת ה-ID של השחקן המקומי
+    onRestart={handleRestart} // הפונקציה שמעדכנת את DB ומרענ
       />
     )}
       </main>
