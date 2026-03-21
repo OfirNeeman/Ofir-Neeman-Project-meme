@@ -164,7 +164,8 @@ const handleNextRound = async () => {
           judgments: [],
           roundsPlayed: prev.roundsPlayed + 1,
           phase: GamePhase.CAPTIONING,
-          players: prev.players // שמירה על הניקוד המצטבר
+          players: prev.players, // שמירה על הניקוד המצטבר
+          totalRounds: data.total_images,
         }));
         
         setTimeout(async () => {
@@ -182,7 +183,7 @@ const handleNextRound = async () => {
             
             setGameState(prev => ({
               ...prev,
-              phase: GamePhase.GAMEOVER
+              phase: GamePhase.GAME_OVER
             }));
           }
     } catch (e) {
@@ -318,7 +319,24 @@ useEffect(() => {
       updatePhase(GamePhase.CAPTIONING);
     }
   };
+
+const handleGameEnd = async () => {
+  if (gameState.roomCode) {
+    await updateDoc(doc(db, "games", gameState.roomCode), {
+      status: "GAME_OVER"
+    });
+  }
+
+  setGameState(prev => ({
+    ...prev,
+    phase: GamePhase.GAME_OVER
+  }));
+};
+
 const finalImage = gameState.currentImageBase64 || image || "";
+const isLastRound = 
+  gameState.totalRounds !== undefined &&
+  gameState.roundsPlayed + 1 >= gameState.totalRounds;
 
 return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-pink-500 selection:text-white">
@@ -460,6 +478,8 @@ return (
             players={gameState.players}
             submissions={gameState.submissions}
             onNextRound={handleNextRound}
+            isLastRound={isLastRound}
+            onGameEnd={handleGameEnd}
           />
         )}
       </main>

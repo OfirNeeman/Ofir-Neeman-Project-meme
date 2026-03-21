@@ -4,7 +4,7 @@ export enum GamePhase {
   CAPTIONING = 'CAPTIONING',
   JUDGING = 'JUDGING',
   RESULTS = 'RESULTS',
-  GAMEOVER = 'GAMEOVER'
+  GAME_OVER = 'GAME_OVER'
 }
 
 export enum JudgePersonality {
@@ -46,5 +46,6 @@ export interface GameState {
   roundsPlayed: number;
   roomCode: string | null; // New: The active room code
   isHost: boolean;
+  totalRounds?: number;
   currentPlayerId: string | null; // New: The ID of the current player
 }

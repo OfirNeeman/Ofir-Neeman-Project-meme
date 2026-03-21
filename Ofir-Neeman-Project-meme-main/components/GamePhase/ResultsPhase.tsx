@@ -10,9 +10,12 @@ interface ResultsPhaseProps {
   players: Player[];
   submissions: any[];
   onNextRound: () => void;
+  isLastRound: boolean;
+  onGameEnd: () => void;
 }
 
-export const ResultsPhase: React.FC<ResultsPhaseProps> = ({ imageSrc, results, players, submissions, onNextRound }) => {
+export const ResultsPhase: React.FC<ResultsPhaseProps> = 
+({ imageSrc, results, players, submissions, onNextRound, isLastRound, onGameEnd }) => {
   const [revealedCount, setRevealedCount] = useState(0);
 
   // Sort results by total score descending
@@ -132,12 +135,19 @@ export const ResultsPhase: React.FC<ResultsPhaseProps> = ({ imageSrc, results, p
                 חשוף את הבא
             </Button>
             ) : (
-            <Button onClick={onNextRound} size="xl" variant="secondary" className="shadow-[0_10px_40px_rgba(0,0,0,0.5)] bg-white text-zinc-900 hover:bg-zinc-200 border-zinc-400">
-                סיבוב חדש 🔄
+            <Button 
+              onClick={isLastRound ? onGameEnd : onNextRound}
+              size="xl" 
+              variant="secondary" 
+              className="shadow-[0_10px_40px_rgba(0,0,0,0.5)] bg-white text-zinc-900 hover:bg-zinc-200 border-zinc-400"
+            >
+              {isLastRound ? "צפו במי ניצח 🏆" : "סיבוב חדש 🔄"}
             </Button>
             )}
         </div>
       </div>
     </div>
+
+  
   );
 };
