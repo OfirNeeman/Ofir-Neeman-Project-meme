@@ -76,6 +76,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
         players: [],
         personality: personality,
         createdAt: new Date(),
+        roundsPlayed: 0,
         isHost: true
       });
 

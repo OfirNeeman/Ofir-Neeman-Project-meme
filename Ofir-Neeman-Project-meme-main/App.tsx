@@ -8,7 +8,7 @@ import { ResultsPhase } from './components/GamePhase/ResultsPhase';
 import { judgeMemes } from './services/geminiService';
 import { Icons } from './components/ui/Icons';
 import { db } from './firebase';
-import { doc, updateDoc, onSnapshot, arrayUnion } from "firebase/firestore";
+import { doc, updateDoc, onSnapshot, arrayUnion,increment} from "firebase/firestore";
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -131,6 +131,7 @@ const handleNextRound = async () => {
           await updateDoc(doc(db, "games", gameState.roomCode), {
           submissions: [],
           status: 'START_NEXT_ROUND',
+          roundsPlayed: increment(1),
           lastImageUpdate: Date.now()// מעדכנים את התמונה ב-DB!
         });
 
@@ -374,11 +375,10 @@ return (
             </div>
           ) : (
           <CaptioningPhase 
-            //imageSrc={gameState.isHost ? `data:image/jpeg;base64,${image}` : (gameState.currentImageBase64 || "")} 
-            playerId={gameState.currentPlayerId!} 
-            playerName={gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || ""}
-            onSubmitCaption={handleSubmitSingleCaption}
-          />
+              //imageSrc={gameState.isHost ? `data:image/jpeg;base64,${image}` : (gameState.currentImageBase64 || "")} 
+              playerId={gameState.currentPlayerId!}
+              playerName={gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || ""}
+              onSubmitCaption={handleSubmitSingleCaption} imageSrc={''}          />
           )
         )}
       {gameState.phase === GamePhase.JUDGING && (
