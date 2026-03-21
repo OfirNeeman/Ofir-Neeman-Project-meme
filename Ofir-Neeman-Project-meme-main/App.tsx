@@ -65,8 +65,13 @@ const App: React.FC = () => {
           status: 'HOST_FINISHED_UPLOAD'
         });
         setHostFinishedUpload(true);
-        const response = await fetch(`http://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`);
+        const response = await fetch(`http://${SERVER_IP}:4000/next_image/${gameState.roomCode}`);
         const data = await response.json();
+        if (data.status === "game_over") {
+          // סיום משחק
+        } else {
+          setImage(data.image);
+        }
         setImage(data.image);
         updatePhase(GamePhase.CAPTIONING);
       } catch (e) {
