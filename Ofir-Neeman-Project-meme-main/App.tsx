@@ -283,6 +283,7 @@ useEffect(() => {
       updatePhase(GamePhase.CAPTIONING);
     }
   };
+const finalImage = gameState.currentImageBase64 || image || "";
 
 return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-pink-500 selection:text-white">
@@ -374,11 +375,17 @@ return (
               </div>
             </div>
           ) : (
-          <CaptioningPhase 
-              //imageSrc={gameState.isHost ? `data:image/jpeg;base64,${image}` : (gameState.currentImageBase64 || "")} 
+        <CaptioningPhase 
               playerId={gameState.currentPlayerId!}
               playerName={gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || ""}
-              onSubmitCaption={handleSubmitSingleCaption} imageSrc={''}          />
+              onSubmitCaption={handleSubmitSingleCaption} 
+              // עדכון כאן:
+              imageSrc={
+                finalImage.startsWith('data:') 
+                  ? finalImage 
+                  : `data:image/jpeg;base64,${finalImage}`
+              }
+            />
           )
         )}
       {gameState.phase === GamePhase.JUDGING && (
@@ -413,7 +420,11 @@ return (
         
         {gameState.phase === GamePhase.RESULTS && (gameState.currentImageBase64 || image) && (
           <ResultsPhase 
-            imageSrc={gameState.currentImageBase64 || `data:image/jpeg;base64,${image}`}
+          imageSrc={
+              finalImage.startsWith('data:') 
+                ? finalImage 
+                : `data:image/jpeg;base64,${finalImage}`
+            }
             results={gameState.judgments}
             players={gameState.players}
             submissions={gameState.submissions}
