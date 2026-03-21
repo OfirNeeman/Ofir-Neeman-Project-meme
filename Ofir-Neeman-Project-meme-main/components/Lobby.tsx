@@ -166,64 +166,103 @@ const handleStart = async () => {
   };
 
   if (mode === 'MENU') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] animate-fade-in relative z-10">
-        <div className="text-center mb-16 relative">
+  return (
+      <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 animate-fade-in relative z-10">
+        <div className="text-center mb-12 md:mb-16 relative">
           <div className="absolute -inset-10 bg-pink-500 blur-[100px] opacity-20 rounded-full animate-pulse"></div>
-          <h1 className="relative text-8xl font-black text-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)] transform -rotate-2">
+          {/* הקטנת הפונט במובייל - text-5xl במקום text-8xl */}
+          <h1 className="relative text-5xl md:text-8xl font-black text-white drop-shadow-2xl transform -rotate-2 leading-none">
             MEME<span className="text-pink-500">MASTER</span>
           </h1>
-          <p className="text-3xl text-pink-200 font-bold tracking-widest mt-4 uppercase text-shadow-sm">AI Party Game</p>
+          <p className="text-xl md:text-3xl text-pink-200 font-bold tracking-widest mt-4 uppercase">AI Party Game</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl px-4">
-          <div onClick={handleCreateGame} className="cursor-pointer group glass-panel p-8 rounded-3xl border-2 border-white/10 hover:border-pink-500 hover:bg-pink-500/10 transition-all transform hover:-translate-y-2 flex flex-col items-center text-center">
-            <div className="bg-pink-500 rounded-full p-6 mb-6 shadow-xl"><Icons.Brain className="w-12 h-12 text-white" /></div>
-            <h2 className="text-3xl font-black mb-2">HOST GAME</h2>
-            <p className="text-pink-200 opacity-80">צור חדר והקרן על המסך</p>
+
+        {/* Grid שהופך לטור אחד במובייל (grid-cols-1) ושני טורים במחשב (md:grid-cols-2) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 w-full max-w-4xl">
+          <div 
+            onClick={handleCreateGame} 
+            className="cursor-pointer group glass-panel p-6 md:p-8 rounded-3xl border-2 border-white/10 hover:border-pink-500 hover:bg-pink-500/10 transition-all flex flex-row md:flex-col items-center gap-4 md:gap-0 text-right md:text-center"
+          >
+            <div className="bg-pink-500 rounded-2xl md:rounded-full p-4 md:p-6 md:mb-6 shadow-xl">
+              <Icons.Brain className="w-8 h-8 md:w-12 md:h-12 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl md:text-3xl font-black text-white">HOST GAME</h2>
+              <p className="text-pink-200 text-sm md:text-base opacity-80">צור חדר והקרן על המסך</p>
+            </div>
           </div>
-          <div onClick={() => setMode('JOIN')} className="cursor-pointer group glass-panel p-8 rounded-3xl border-2 border-white/10 hover:border-cyan-500 hover:bg-cyan-500/10 transition-all transform hover:-translate-y-2 flex flex-col items-center text-center">
-            <div className="bg-cyan-500 rounded-full p-6 mb-6 shadow-xl"><Icons.User className="w-12 h-12 text-white" /></div>
-            <h2 className="text-3xl font-black mb-2">JOIN GAME</h2>
-            <p className="text-pink-200 opacity-80">הצטרף מהטלפון שלך</p>
+
+          <div 
+            onClick={() => setMode('JOIN')} 
+            className="cursor-pointer group glass-panel p-6 md:p-8 rounded-3xl border-2 border-white/10 hover:border-cyan-500 hover:bg-cyan-500/10 transition-all flex flex-row md:flex-col items-center gap-4 md:gap-0 text-right md:text-center"
+          >
+            <div className="bg-cyan-500 rounded-2xl md:rounded-full p-4 md:p-6 md:mb-6 shadow-xl">
+              <Icons.User className="w-8 h-8 md:w-12 md:h-12 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl md:text-3xl font-black text-white">JOIN GAME</h2>
+              <p className="text-pink-200 text-sm md:text-base opacity-80">הצטרף מהטלפון שלך</p>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  if (mode === 'JOIN' || mode === 'WAITING') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] max-w-md mx-auto relative z-10">
-        <div className="glass-panel p-10 rounded-[2.5rem] shadow-2xl w-full text-center space-y-8 border-2 border-white/10">
-          {!joined ? (
-            <>
-              <h2 className="text-4xl font-black text-white">הצטרפות</h2>
-              <div className="space-y-6">
-                <input type="text" placeholder="קוד חדר" value={inputCode} onChange={(e) => setInputCode(e.target.value.toUpperCase())} className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-6 py-5 text-center text-3xl font-black uppercase text-white" maxLength={5} />
-                <input type="text" placeholder="כינוי" value={playerName} onChange={handleNameChange} maxLength={maxLength} className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-6 py-5 text-center text-2xl font-bold text-white" />
-                <div className="absolute left-4 bottom-2 text-[10px] text-zinc-500 font-bold">
-                    {playerName.length}/{maxLength}
-                  </div>
+if (mode === 'JOIN' || mode === 'WAITING') {
+  return (
+    <div className="flex flex-col items-center justify-start md:justify-center min-h-screen md:min-h-[60vh] max-w-md mx-auto pt-8 md:pt-0 px-4 relative z-10">
+      <div className="glass-panel p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl w-full text-center space-y-6 md:space-y-8 border-2 border-white/10">
+        {!joined ? (
+          <>
+            <h2 className="text-3xl md:text-4xl font-black text-white italic">מוכנים?</h2>
+            <div className="space-y-4 md:space-y-6">
+              <input 
+                type="text" 
+                placeholder="קוד חדר" 
+                value={inputCode} 
+                onChange={(e) => setInputCode(e.target.value.toUpperCase())} 
+                className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-4 py-4 md:py-5 text-center text-3xl font-black uppercase text-white focus:border-pink-500 outline-none transition-colors" 
+                maxLength={5} 
+              />
+              <div className="relative">
+                <input 
+                  type="text" 
+                  placeholder="כינוי" 
+                  value={playerName} 
+                  onChange={handleNameChange} 
+                  className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-4 py-4 md:py-5 text-center text-xl md:text-2xl font-bold text-white focus:border-pink-500 outline-none transition-colors" 
+                />
+                <span className="absolute left-4 bottom-2 text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                  {playerName.length}/{maxLength}
+                </span>
               </div>
-              <Button onClick={handleJoinGame} disabled={!inputCode || !playerName} size="xl" className="w-full">Let's Go!</Button>
-            </>
-          ) : (
-            <div className="space-y-8 py-10">
-              <div className="text-8xl animate-bounce">🤘</div>
-              <h2 className="text-4xl font-black text-white">התחברת!</h2>
-              <p className="text-pink-200">חכה שהמארח יתחיל את המשחק...</p>
             </div>
-          )}
-        </div>
-        {!joined && (
-          <button onClick={() => setMode('MENU')} className="mt-8 text-pink-300/60 hover:text-white font-bold text-sm uppercase tracking-widest transition-colors">
-            חזרה לתפריט
-          </button>
+            <Button onClick={handleJoinGame} disabled={!inputCode || !playerName} size="xl" className="w-full py-6 text-xl shadow-lg shadow-pink-500/20">
+              כניסה למשחק
+            </Button>
+          </>
+        ) : (
+          <div className="space-y-6 py-8">
+            <div className="text-7xl md:text-8xl animate-bounce">🤘</div>
+            <h2 className="text-3xl md:text-4xl font-black text-white italic">נרשמת בהצלחה!</h2>
+            <p className="text-pink-200 text-lg">עכשיו רק נשאר לחכות שהמארח ילחץ על START</p>
+            <div className="flex gap-2 justify-center pt-4">
+              <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+              <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+              <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce"></div>
+            </div>
+          </div>
         )}
       </div>
-    );
-  }
-
+      {!joined && (
+        <button onClick={() => setMode('MENU')} className="mt-8 text-zinc-500 hover:text-white font-bold text-sm uppercase tracking-widest p-4">
+           ← חזרה לתפריט
+        </button>
+      )}
+    </div>
+  );
+}
   return (
     <div className="max-w-6xl mx-auto p-4 flex flex-col items-center relative z-10">
       <div className="bg-white text-zinc-950 px-16 py-6 rounded-full shadow-2xl border-4 border-pink-500 mb-16">
