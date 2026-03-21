@@ -125,6 +125,19 @@ const handleNextRound = async () => {
       const response = await fetch(`http://${SERVER_IP}:4000/next_image/${gameState.roomCode}`);
       const data = await response.json();
 
+      if (data.status === "game_over") {
+        await updateDoc(doc(db, "games", gameState.roomCode), {
+          status: "GAME_OVER"
+        });
+
+        setGameState(prev => ({
+          ...prev,
+          phase: GamePhase.LOBBY // או phase חדש של סיום
+        }));
+
+        return;
+      }
+
       if (data.image) {
         // 2. עדכון ה-Firebase: המארח מעלה את ה-Base64 החדש ל-DB
         // זה מה שיגרום לכל השחקנים לראות את התמונה החדשה ב-useEffect שלהם
@@ -156,6 +169,17 @@ const handleNextRound = async () => {
         }, 2000);
         return; 
       }
+    else {
+            // מצב שבו אין יותר תמונות בשרת (data.image ריק או null)
+            await updateDoc(doc(db, "games", gameState.roomCode), {
+              status: 'GAME_OVER' // מעדכנים את ה-DB שהמשחק נגמר
+            });
+            
+            setGameState(prev => ({
+              ...prev,
+              phase: GamePhase.GAMEOVER
+            }));
+          }
     } catch (e) {
       console.error("Error fetching next image:", e);
     }
@@ -194,7 +218,13 @@ useEffect(() => {
   if (gameState.phase !== GamePhase.LOBBY && gameState.roomCode) {
     unsubscribe = onSnapshot(doc(db, "games", gameState.roomCode), async (docSnap) => {
       if (!docSnap.exists()) return;
-      const data = docSnap.data();
+    const data = docSnap.data();
+    if (data.status === "GAME_OVER") {
+    setGameState(prev => ({
+      ...prev,
+      phase: GamePhase.LOBBY // או מסך סיום
+    }));
+  }
 
       // 1. עדכון בסיסי של שחקנים וכיתובים
       setGameState(prev => ({

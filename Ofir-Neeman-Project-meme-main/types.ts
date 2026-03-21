@@ -4,6 +4,7 @@ export enum GamePhase {
   CAPTIONING = 'CAPTIONING',
   JUDGING = 'JUDGING',
   RESULTS = 'RESULTS',
+  GAMEOVER = 'GAMEOVER'
 }
 
 export enum JudgePersonality {

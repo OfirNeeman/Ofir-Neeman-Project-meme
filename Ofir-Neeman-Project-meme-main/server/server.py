@@ -95,7 +95,7 @@ def create_room_dir():
         return jsonify({"error": "No room code provided"}), 400
     
     room_path = os.path.join(UPLOADS_DIR, room_code)
-    
+    room_image_index[room_code] = 0 # הוסף את זה בתוך create_room_dir
     try:
         if not os.path.exists(room_path):
             os.makedirs(room_path)
@@ -159,25 +159,28 @@ def get_next_image(room_code):
     if not os.path.exists(room_folder):
         return jsonify({"error": "Room not found"}), 404
 
-    # סינון קבצים
+    # סינון קבצים - מוודא שרק תמונות נכנסות לרשימה
     images = sorted([f for f in os.listdir(room_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))])
+    
     if not images:
-        return jsonify({"error": "No images"}), 404
+        return jsonify({"error": "No images in folder", "image": None}), 404 # הוספת image: None
 
-    # שליפת האינדקס הנוכחי (ברירת מחדל 0)
+    # שליפת האינדקס הנוכחי
     current_index = room_image_index.get(room_code, 0)
     
-    # בדיקה שלא חרגנו מהרשימה
+    # בדיקה אם נגמרו התמונות
     if current_index >= len(images):
-        # אפשרות א': לחזור להתחלה
-        #current_index = 0
-        # אפשרות ב': להחזיר הודעה שהמשחק נגמר
-        return jsonify({"status": "game_over"}), 200
+        # מחזירים תשובה מפורשת שאין יותר תמונה
+        return jsonify({
+            "status": "game_over",
+            "image": None, # חשוב עבור ה-if (data.image) ב-React
+            "message": "No more images"
+        }), 200
 
     image_name = images[current_index]
     image_path = os.path.join(room_folder, image_name)
 
-    # עדכון האינדקס לסיבוב הבא בזיכרון השרת
+    # עדכון האינדקס לסיבוב הבא
     room_image_index[room_code] = current_index + 1
 
     try:
@@ -191,7 +194,7 @@ def get_next_image(room_code):
             "total_images": len(images)
         })
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e), "image": None}), 500
 
 if __name__ == "__main__":
     init_uploads_dir()
