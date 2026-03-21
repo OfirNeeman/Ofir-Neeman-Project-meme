@@ -338,6 +338,27 @@ const handleGameEnd = async () => {
   }
 };
 
+const handleRestart = async () => {
+  if (gameState.isHost && gameState.roomCode) {
+    try {
+      // מנקים את החדר ב-DB כדי שהבא שייכנס לקוד הזה יתחיל מאפס
+      await updateDoc(doc(db, "games", gameState.roomCode), {
+        status: 'LOBBY',
+        players: [],
+        submissions: [],
+        roundsPlayed: 0,
+        results: [],
+        currentImageBase64: null // חשוב מאוד לאפס את התמונה!
+      });
+    } catch (e) {
+      console.error("Error cleaning DB:", e);
+    }
+  }
+  
+  // הריענון שביקשת - מחזיר את האפליקציה למצב התחלתי
+  window.location.reload();
+};
+
 const finalImage = gameState.currentImageBase64 || image || "";
 const isLastRound = 
   gameState.totalRounds !== undefined &&
@@ -489,10 +510,8 @@ return (
         )}
         {gameState.phase === GamePhase.GAME_OVER && (
       <WinnerPhase 
-        players={gameState.players}
-        onRestart={() => {
-          window.location.reload();
-        }}
+        players={gameState.players} 
+        onRestart={handleRestart}
       />
     )}
       </main>
