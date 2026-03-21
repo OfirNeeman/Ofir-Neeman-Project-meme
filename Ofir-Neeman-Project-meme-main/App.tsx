@@ -380,11 +380,7 @@ return (
               playerName={gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || ""}
               onSubmitCaption={handleSubmitSingleCaption} 
               // עדכון כאן:
-              imageSrc={
-                finalImage.startsWith('data:') 
-                  ? finalImage 
-                  : `data:image/jpeg;base64,${finalImage}`
-              }
+              imageSrc={''}
             />
           )
         )}

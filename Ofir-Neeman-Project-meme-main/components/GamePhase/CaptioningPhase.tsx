@@ -38,18 +38,21 @@ export const CaptioningPhase: React.FC<CaptioningPhaseProps> = ({
   return (
     <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12 items-start animate-fade-in pt-4">
       {/* תצוגת התמונה - הסרתי את הסוגריים המיותרים כדי שהיא תופיע */}
-      <div className="w-full lg:w-1/2">
-        <div className="bg-black rounded-[2rem] overflow-hidden shadow-2xl shadow-black/50 border-4 border-zinc-800 relative group">
-           <img src={imageSrc} alt="Meme Context" className="w-full h-auto object-contain" />
-        </div>
-      </div>
+      {imageSrc && (
+              <div className="w-full lg:w-1/2">
+                <div className="bg-black rounded-[2rem] overflow-hidden shadow-2xl border-4 border-zinc-800 relative group">
+                  <img src={imageSrc} alt="Meme Context" className="w-full h-auto object-contain" />
+                </div>
+              </div>
+            )}
 
-      <div className="w-full lg:w-1/2 flex flex-col space-y-8">
-        <div className="flex items-center gap-6">
-            <h3 className="text-sm uppercase tracking-[0.2em] text-zinc-500 font-black">
-              היי {playerName}, כתוב כיתוב:
-            </h3>
-        </div>
+            {/* 2. התאמת רוחב אזור הטקסט: אם אין תמונה, שיתפוס את כל הרוחב (או יהיה ממורכז) */}
+            <div className={`w-full ${imageSrc ? 'lg:w-1/2' : 'max-w-2xl'} flex flex-col space-y-8`}>
+              <div className="flex items-center gap-6">
+                  <h3 className="text-sm uppercase tracking-[0.2em] text-zinc-500 font-black">
+                    היי {playerName}, כתוב כיתוב:
+                  </h3>
+              </div>
 
         <textarea
           value={currentInput}
