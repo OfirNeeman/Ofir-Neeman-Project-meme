@@ -9,6 +9,7 @@ import { judgeMemes } from './services/geminiService';
 import { Icons } from './components/ui/Icons';
 import { db } from './firebase';
 import { doc, updateDoc, onSnapshot, arrayUnion,increment} from "firebase/firestore";
+import { WinnerPhase } from './components/GamePhase/WinnerPhase';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -228,7 +229,7 @@ useEffect(() => {
     if (data.status === "GAME_OVER") {
     setGameState(prev => ({
       ...prev,
-      phase: GamePhase.LOBBY // או מסך סיום
+      phase: GamePhase.GAME_OVER // או מסך סיום
     }));
   }
 
@@ -322,15 +323,19 @@ useEffect(() => {
 
 const handleGameEnd = async () => {
   if (gameState.roomCode) {
-    await updateDoc(doc(db, "games", gameState.roomCode), {
-      status: "GAME_OVER"
-    });
+    try {
+      await updateDoc(doc(db, "games", gameState.roomCode), {
+        status: "GAME_OVER"
+      });
+      // העדכון המקומי למארח (למקרה שה-Snapshot איטי)
+      setGameState(prev => ({
+        ...prev,
+        phase: GamePhase.GAME_OVER
+      }));
+    } catch (e) {
+      console.error("Error ending game:", e);
+    }
   }
-
-  setGameState(prev => ({
-    ...prev,
-    phase: GamePhase.GAME_OVER
-  }));
 };
 
 const finalImage = gameState.currentImageBase64 || image || "";
@@ -482,6 +487,20 @@ return (
             onGameEnd={handleGameEnd}
           />
         )}
+        {gameState.phase === GamePhase.GAME_OVER && (
+      <WinnerPhase 
+        players={gameState.players}
+        onRestart={() => {
+          setGameState(prev => ({
+            ...prev,
+            phase: GamePhase.LOBBY,
+            roundsPlayed: 0,
+            submissions: [],
+            judgments: []
+          }));
+        }}
+      />
+    )}
       </main>
     </div>
   );
