@@ -78,7 +78,7 @@ export const WinnerPhase: React.FC<WinnerPhaseProps> = ({
   // ------------------------------------------------------------------
   // תצוגת השחקן - טלפון (מתוקן)
   // ------------------------------------------------------------------
-  const renderPlayerView = () => {
+const renderPlayerView = () => {
     const myPlayer = players.find(p => p.id === currentPlayerId);
     
     if (!myPlayer) {
@@ -90,12 +90,17 @@ export const WinnerPhase: React.FC<WinnerPhaseProps> = ({
       );
     }
 
+    // חישוב המיקום לצורך תצוגה
     const myRank = sorted.findIndex(p => p.id === currentPlayerId) + 1;
-    const isWinner = myRank === 1;
+    
+    // בדיקת ניצחון: האם הניקוד שלי שווה לניקוד הגבוה ביותר?
+    // זה מבטיח שגם במקרה של תיקו, כל השחקנים עם אותו ציון יראו "ניצחתם!"
+    const isWinner = myPlayer.score === highScore && highScore > 0;
 
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 bg-zinc-950 animate-in fade-in duration-500">
         <div className="relative mb-8">
+          {/* אפקט זוהר רק למנצחים */}
           {isWinner && <div className="absolute -inset-6 bg-yellow-400/20 blur-3xl rounded-full animate-pulse"></div>}
           <div className={`text-7xl ${isWinner ? 'animate-bounce' : ''}`}>
             {isWinner ? "🏆" : "🏅"}
@@ -107,7 +112,7 @@ export const WinnerPhase: React.FC<WinnerPhaseProps> = ({
             {isWinner ? "ניצחתם!" : "כל הכבוד!"}
           </h1>
           <p className={`${isWinner ? 'text-yellow-400' : 'text-pink-200'} text-3xl font-bold`}>
-            מקום {myRank}
+             {isWinner ? "מקום 1" : `מקום ${myRank}`}
           </p>
           <p className="text-zinc-400 text-xl">
             {myPlayer.score} נקודות
