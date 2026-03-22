@@ -41,6 +41,7 @@ export const ResultsPhase: React.FC<ResultsPhaseProps> =
       </div>
     </div>
   );
+  const maxScoreInRound = Math.max(...results.map(r => r.totalScore));
 
   return (
     <div className="max-w-4xl mx-auto pb-32 pt-8">
@@ -53,8 +54,7 @@ export const ResultsPhase: React.FC<ResultsPhaseProps> =
           const playerSubmission = submissions.find(s => String(s.playerId).trim() === String(result.playerId).trim());
           //const playerSubmission = submissions.find(s => s.playerId === result.playerId);
           const player = getPlayer(result.playerId);
-          const isWinner = index === 0 && revealedCount === sortedResults.length - 1;
-
+          const isWinner = result.totalScore === maxScoreInRound && revealedCount === sortedResults.length - 1;
           console.log("Submissions received:", submissions);
           console.log("Looking for playerId:", result.playerId);
 

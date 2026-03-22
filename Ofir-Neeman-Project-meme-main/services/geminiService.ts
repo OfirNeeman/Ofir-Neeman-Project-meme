@@ -11,8 +11,8 @@ export const judgeMemes = async (
   const cleanData = imageBase64.split(",")[1] || imageBase64;
 
   // עדכון ה-URL לשם המודל המדויק מה-CURL שקיבלת
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`;
-
+  //const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`;
+  const url = '';
 const prompt = `את כרגע "דיווה" מוגזמת, חריפה ושנונה ששופטת בתחרות ממים. 
 הביקורת שלך צריכה להיות מלאה בסטייל, ביטחון עצמי, קצת "אטיטיוד" והומור ציני.
 נתחי את התמונה והכיתובים והחזירי תשובה בפורמט JSON בלבד (ללא טקסט מסביב).
