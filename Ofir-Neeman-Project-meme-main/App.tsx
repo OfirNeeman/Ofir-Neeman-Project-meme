@@ -60,7 +60,7 @@ const App: React.FC = () => {
     }));
 
     try {
-    const response = await fetch(`http://localhost:4000/login-room`, {
+    const response = await fetch(`https://localhost:4000/login-room`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ roomCode: code, playerId: playerId || 'host' })
@@ -91,7 +91,7 @@ const App: React.FC = () => {
           status: 'HOST_FINISHED_UPLOAD'
         });
         setHostFinishedUpload(true);
-        const response = await fetchWithAuth(`http://${SERVER_IP}:4000/next_image/${gameState.roomCode}`);
+        const response = await fetchWithAuth(`https://${SERVER_IP}:4000/next_image/${gameState.roomCode}`);
         const data = await response.json();
         if (data.status === "game_over") {
           // סיום משחק
@@ -153,7 +153,7 @@ const handleNextRound = async () => {
       const SERVER_IP = "192.168.1.149";
       
       // 1. משוך את התמונה הבאה מהשרת הפרטי
-      const response = await fetchWithAuth(`http://${SERVER_IP}:4000/next_image/${gameState.roomCode}`);
+      const response = await fetchWithAuth(`https://${SERVER_IP}:4000/next_image/${gameState.roomCode}`);
       const data = await response.json();
 
       if (data.status === "game_over") {
@@ -291,7 +291,7 @@ useEffect(() => {
           
           // מושכים תמונה רק אם אנחנו צריכים לעבור ל-Captioning
           if (gameState.phase !== GamePhase.CAPTIONING || isStartingNextRound) {
-            const response = await fetchWithAuth(`http://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`);
+            const response = await fetchWithAuth(`https://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`);
             const imageData = await response.json();
 
             if (imageData.image) {

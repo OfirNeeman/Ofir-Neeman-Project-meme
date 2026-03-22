@@ -27,7 +27,7 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onS
       const token = localStorage.getItem('game_token');
 
       try {
-        const response = await fetch(`http://192.168.1.149:4000/upload/${roomCode}`, {
+        const response = await fetch(`https://192.168.1.149:4000/upload/${roomCode}`, {
           method: 'POST',
           body: file, // שולחים את ה-file המקורי (שהוא Blob)
           headers: {

@@ -244,4 +244,4 @@ def get_next_image(room_code):
 if __name__ == "__main__":
     init_uploads_dir()
     # הרצת השרת - הפקודה הזו חייבת להיות אחרונה!
-    app.run(host='0.0.0.0', port=PORT, debug=True)
+    app.run(host='0.0.0.0', port=PORT, debug=True, ssl_context='adhoc')
