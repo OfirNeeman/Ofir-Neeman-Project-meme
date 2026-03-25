@@ -27,4 +27,4 @@ def proxy():
     return jsonify(response)
 
 if __name__ == "__main__":
-    app.run(port=4001) # ה-React ידבר עם פורט 4001
+    app.run(port=4001, ssl_context=("cert.pem", "key.pem")) # ה-React ידבר עם פורט 4001
