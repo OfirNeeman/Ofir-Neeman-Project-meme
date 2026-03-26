@@ -83,7 +83,12 @@ def start_tcp_server():
 # הפעלה ב-Thread נפרד כדי ש-Flask ימשיך לעבוד
 threading.Thread(target=start_tcp_server, daemon=True).start()
 app = Flask(__name__)
-CORS(app) # מאפשר ל-React לתקשר עם השרת בלי חסימות דפדפן
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization,ngrok-skip-browser-warning'
+    response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
+    return response
 
 MY_CATEGORIES = ['actions', 'vine', 'bright', 'emotions', 'the office', 'breaking bad', 'dance moms', 'brooklyn 99', 'כאן 11']
 @app.route('/login-room', methods=['POST'])

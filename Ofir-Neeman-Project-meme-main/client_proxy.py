@@ -5,7 +5,13 @@ import socket
 import json
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization,ngrok-skip-browser-warning'
+    response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
+    return response
 
 SERVER_IP = '127.0.0.1'
 SERVER_PORT = 5001
@@ -23,6 +29,13 @@ def proxy():
     # ה-React שולח לכאן בקשה
     data = request.json
     # המתווך מעביר אותה ב-TCP לשרת הראשי
+    response = send_tcp_message(data)
+    return jsonify(response)
+
+@app.route('/login-room', methods=['POST'])
+def proxy_login():
+    # מעביר את בקשת הלוגין לשרת הראשי ב-TCP
+    data = request.json
     response = send_tcp_message(data)
     return jsonify(response)
 

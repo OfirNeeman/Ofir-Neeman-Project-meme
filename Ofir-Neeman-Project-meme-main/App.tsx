@@ -60,9 +60,11 @@ const App: React.FC = () => {
     }));
 
     try {
-    const response = await fetch(`http://localhost:4000/login-room`, {
+    const NGROK_URL = 'https://iconoclastic-erich-distillable.ngrok-free.dev'; 
+    const response = await fetch(`${NGROK_URL}/login-room`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true' },
       body: JSON.stringify({ roomCode: code, playerId: playerId || 'host' })
     });
     const data = await response.json();
@@ -233,7 +235,9 @@ const handleNextRound = async () => {
 
   const callViaSocket = async (action: string, data: any) => {
     try {
-      const response = await fetch('http://localhost:4001/proxy', {
+      const NGROK_URL = 'https://iconoclastic-erich-distillable.ngrok-free.dev'; 
+    
+      const response = await fetch(`${NGROK_URL}/proxy`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action, ...data })
