@@ -63,34 +63,32 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onS
     };
     
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-lg border-2 border-purple-200">
-      <div className="text-sm text-gray-500 mb-2">
+    <div className="flex flex-col items-center justify-center p-6 bg-zinc-900/50 rounded-3xl border-2 border-white/10 backdrop-blur-xl shadow-2xl">
+      <div className="text-xs font-black uppercase tracking-widest text-pink-500 mb-2">
         {isHost ? "המארח" : "משתמש רגיל"}
       </div>
 
-      <h2 className="text-2xl font-bold mb-4 text-purple-800">
-        בחירת תמונה למם
+
+      <h2 className="text-3xl font-black mb-6 text-white italic">
+        {isHost ? "מחכים לתמונות..." : "תעלה משהו מצחיק!"}
       </h2>
 
       {isHost ? (
-        <>
-          <p className="mb-6 text-gray-600 text-center">
-            המשתתפים מעלים עכשיו תמונות… המתן לבחירה שלהם.
-          </p>
+        <div className="text-center space-y-6">
+          <p className="text-zinc-400 font-medium">המשתתפים מעלים תמונות עכשיו. כולם מוכנים?</p>
           <button 
             onClick={onStartGame} // חיבור הלחיצה למעבר השלב
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-md transition-all"
+            className="group relative px-8 py-4 bg-white text-black font-black rounded-full hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
           >
            התחל שלב הבא! 🚀
           </button>
-        </>
+        </div>
       ) : (
-        <>
-          <p className="mb-6 text-gray-600 text-center">
-            העלאה ישירה לשרת הסוקטים (תיקיית uploads):
-          </p>
-          <label className={`cursor-pointer font-bold py-3 px-6 rounded-full transition-all shadow-md ${
-            uploadStatus === 'success' ? 'bg-green-500 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white'
+          <div className="flex flex-col items-center gap-4">
+          <label className={`relative cursor-pointer group overflow-hidden px-10 py-5 rounded-2xl font-black transition-all duration-500 shadow-xl ${
+            uploadStatus === 'success' 
+              ? 'bg-green-500 text-white scale-95' 
+              : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-pink-500/20'
           }`}>
             {isProcessing ? "מעלה לשרת..." : 
              uploadStatus === 'success' ? "נשלח לסוקט! ✅" : "בחר תמונה והעלה"}
@@ -99,18 +97,19 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onS
               accept="image/*"
               onChange={handleFileChange}
               className="hidden"
-              disabled={isProcessing}
+              disabled={isProcessing || uploadStatus === 'success'}
             />
           </label>
           
           {uploadStatus === 'error' && (
-            <p className="mt-2 text-red-500 text-xs text-center">
-              השרת לא זמין, התמונה תישמר ב-Firebase בלבד.
-            </p>
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <p className="text-red-400 text-sm font-bold text-center">
+                השרת לא זמין. וודא שאתה מחובר לאותו Wi-Fi ושהשרת רץ.
+              </p>
+            </div>
           )}
-        </>
+        </div> /* כאן היה התיקון של ה-div הסוגר */
       )}
-
       <div className="mt-4 text-xs text-gray-400">
         * התמונה נשלחת במקביל לשרת פייתון ול-Firebase
       </div>
