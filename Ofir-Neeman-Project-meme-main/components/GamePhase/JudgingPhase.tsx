@@ -18,8 +18,8 @@ export const JudgingPhase: React.FC = () => {
       
       <div className="space-y-4 max-w-lg">
         {/* 4. טקסט קבוע במקום שם השופט */}
-        <h2 className="text-5xl font-black text-white leading-tight">The diva is thinking...</h2>
-        <p className="text-2xl text-pink-200 font-medium opacity-80">"Wait, I'm looking for the funny part..."</p>
+        <h2 className="text-5xl font-black text-white leading-tight">...The diva is thinking</h2>
+        <p className="text-2xl text-pink-200 font-medium opacity-80">"Wait, I'm looking for the funny part"</p>
       </div>
 
       <div className="flex gap-4 p-4 bg-white/5 rounded-full backdrop-blur-md border border-white/10">

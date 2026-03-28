@@ -72,7 +72,7 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onS
 
 
       <h2 className="text-3xl font-black mb-6 text-white italic">
-        {isHost ? "Waiting for others..." : "Upload your image!"}
+        {isHost ? "Waiting for others" : "!Upload your image"}
       </h2>
 
       {isHost ? (

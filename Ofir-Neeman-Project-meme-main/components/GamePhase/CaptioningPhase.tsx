@@ -50,14 +50,14 @@ export const CaptioningPhase: React.FC<CaptioningPhaseProps> = ({
             <div className={`w-full ${imageSrc ? 'lg:w-1/2' : 'max-w-2xl'} flex flex-col space-y-8`}>
               <div className="flex items-center gap-6">
                   <h3 className="text-sm uppercase tracking-[0.2em] text-zinc-500 font-black">
-                    Hey {playerName}, What's your caption?:
+                    ?Hey {playerName}, What's your caption
                   </h3>
               </div>
 
         <textarea
           value={currentInput}
           onChange={(e) => setCurrentInput(e.target.value)}
-          placeholder="Write something funny..."
+          placeholder="...Write something funny"
           className="w-full bg-white text-zinc-900 rounded-[2rem] p-8 h-64 text-3xl font-bold outline-none resize-none shadow-xl border-b-8 border-zinc-300 focus:border-pink-500 transition-all"
           autoFocus
         />
@@ -67,7 +67,7 @@ export const CaptioningPhase: React.FC<CaptioningPhaseProps> = ({
           size="xl" 
           className="w-full shadow-2xl shadow-pink-500/20"
         >
-          Submit Caption!
+          !Submit Caption
         </Button>
       </div>
     </div>

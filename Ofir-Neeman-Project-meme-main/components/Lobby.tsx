@@ -245,7 +245,7 @@ if (mode === 'JOIN' || mode === 'WAITING') {
         ) : (
           <div className="space-y-6 py-8">
             <div className="text-7xl md:text-8xl animate-bounce">🤘</div>
-            <h2 className="text-3xl md:text-4xl font-black text-white italic">!Successfully Joined</h2>
+            <h2 className="text-3xl md:text-4xl font-black text-white italic">Successfully Joined</h2>
             <p className="text-pink-200 text-lg">Now you just need to wait for the host to press START</p>
             <div className="flex gap-2 justify-center pt-4">
               <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>

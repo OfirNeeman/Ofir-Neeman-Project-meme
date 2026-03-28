@@ -21,42 +21,39 @@ export const WinnerPhase: React.FC<WinnerPhaseProps> = ({
   const winners = sorted.filter(p => p.score === highScore && highScore > 0);
   const others = sorted.filter(p => p.score !== highScore);
 
-  const renderHostView = () => (
-    <div className="max-w-5xl mx-auto text-center pt-12 pb-24 px-4 animate-in fade-in duration-500">
-      <h1 className="text-6xl font-black text-pink-400 mb-12 animate-pulse drop-shadow-lg">
-        {winners.length > 1 ? "🤝 It's a tie 🤝" : "🏆 The Winner 🏆"}
+const renderHostView = () => (
+    <div className="max-w-5xl mx-auto text-center pt-12 pb-24 px-4">
+      <h1 className="text-5xl font-black text-white mb-16 tracking-tighter">
+        {winners.length > 1 ? "🤝 IT'S A TIE" : "🏆 THE WINNER"}
       </h1>
 
-      <div className="flex flex-wrap justify-center gap-10 mb-20">
+      <div className="flex flex-wrap justify-center gap-6 mb-20">
         {winners.map((player) => (
-          <div key={player.id} className="relative group">
-            <div className="absolute -inset-2 bg-gradient-to-r from-pink-400 via-fuchsia-500 to-purple-500 rounded-3xl blur-xl opacity-70"></div>
-            <div className="relative flex flex-col items-center backdrop-blur-xl bg-white/5 border border-white/10 p-10 rounded-3xl shadow-2xl min-w-[220px]">
-              <div className="text-6xl mb-4">👑</div>
-              <div className={`p-5 rounded-2xl ${player.avatar || 'bg-white/10'} mb-4`}>
-                <Icons.User className="w-12 h-12 text-white" />
+          <div key={player.id} className="relative">
+            {/* הורדתי את ה-div עם ה-blur הסגול שהיה כאן */}
+            <div className="relative flex flex-col items-center bg-white/10 border border-white/20 p-8 rounded-2xl min-w-[200px] shadow-lg">
+              <div className="text-5xl mb-4">👑</div>
+              <div className={`p-4 rounded-full ${player.avatar || 'bg-white/5'} mb-4 border border-white/10`}>
+                <Icons.User className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-3xl font-black text-white mb-2">{player.name}</h2>
-              <p className="text-pink-300 font-bold text-2xl">{player.score} pts</p>
+              <h2 className="text-2xl font-black text-white">{player.name}</h2>
+              <p className="text-pink-400 font-bold text-xl">{player.score} pts</p>
             </div>
           </div>
         ))}
       </div>
 
+      {/* רשימת הדירוג - עשינו אותה יותר שקופה ופחות "כבדה" */}
       {others.length > 0 && (
-        <div className="max-w-xl mx-auto mb-16">
-          <h3 className="text-pink-200 font-bold uppercase tracking-widest text-sm mb-6">Final Ranking</h3>
-          <div className="space-y-3">
+        <div className="max-w-md mx-auto mb-12">
+          <div className="space-y-2">
             {others.map((p, i) => (
-              <div key={p.id} className="flex justify-between items-center backdrop-blur-lg bg-white/5 p-4 rounded-xl border border-white/10">
+              <div key={p.id} className="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
                 <div className="flex items-center gap-3">
-                  <span className="text-pink-300 font-mono w-6 text-left">{winners.length + i + 1}.</span>
-                  <div className={`p-2 rounded-lg ${p.avatar || 'bg-white/10'} scale-75`}>
-                    <Icons.User className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-white font-bold text-lg">{p.name}</span>
+                  <span className="text-white/40 font-mono text-sm">{winners.length + i + 1}</span>
+                  <span className="text-white font-bold">{p.name}</span>
                 </div>
-                <span className="text-pink-300 font-medium">{p.score} pts</span>
+                <span className="text-white/60 text-sm">{p.score} pts</span>
               </div>
             ))}
           </div>
@@ -65,10 +62,9 @@ export const WinnerPhase: React.FC<WinnerPhaseProps> = ({
 
       <Button 
         onClick={onRestart} 
-        size="xl" 
-        className="bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 px-16 shadow-xl hover:scale-105 transition"
+        className="bg-white text-black hover:bg-pink-500 hover:text-white px-12 py-6 rounded-full font-black transition-all"
       >
-        Back to Lobby
+        PLAY AGAIN
       </Button>
     </div>
   );
@@ -124,7 +120,7 @@ export const WinnerPhase: React.FC<WinnerPhaseProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-900 via-fuchsia-900 to-purple-900 overflow-y-auto">
+    <div className="min-h-screen overflow-y-auto bg-transparent">
       {isHost ? renderHostView() : renderPlayerView()}
     </div>
   );
