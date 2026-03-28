@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { GameState, GamePhase, Player, JudgePersonality, MemeSubmission } from './types';
 import { Lobby } from './components/Lobby';
@@ -24,15 +25,6 @@ const App: React.FC = () => {
     isHost: false,
     currentPlayerId: null,
   });
-  
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('game_token');
-  const headers = {
-    ...options.headers,
-    'Authorization': `Bearer ${token}`,
-  };
-  return fetch(url, { ...options, headers });
-};
 
   const [image, setImage] = useState<string | null>(null);
   const [hostFinishedUpload, setHostFinishedUpload] = useState(false);
@@ -58,24 +50,6 @@ const App: React.FC = () => {
       roomCode: code,
       currentPlayerId: playerId || prev.currentPlayerId
     }));
-
-    try {
-    const NGROK_URL = 'https://iconoclastic-erich-distillable.ngrok-free.dev'; 
-    const response = await fetch(`${NGROK_URL}/login-room`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': 'true' },
-      body: JSON.stringify({ roomCode: code, playerId: playerId || 'host' })
-    });
-    const data = await response.json();
-    if (data.token) {
-      localStorage.setItem('game_token', data.token);
-      console.log("Current Token:", localStorage.getItem('game_token'));
-      alert("Token saved: " + localStorage.getItem('game_token')); 
-    }
-  } catch (e) {
-    console.error("JWT Fetch Error:", e);
-  }
   };
 
   const handleImageSelected = (base64: string) => {
@@ -93,7 +67,7 @@ const App: React.FC = () => {
           status: 'HOST_FINISHED_UPLOAD'
         });
         setHostFinishedUpload(true);
-        const response = await fetchWithAuth(`http://${SERVER_IP}:4000/next_image/${gameState.roomCode}`);
+        const response = await fetch(`http://${SERVER_IP}:4000/next_image/${gameState.roomCode}`);
         const data = await response.json();
         if (data.status === "game_over") {
           // סיום משחק
@@ -155,7 +129,7 @@ const handleNextRound = async () => {
       const SERVER_IP = "192.168.1.149";
       
       // 1. משוך את התמונה הבאה מהשרת הפרטי
-      const response = await fetchWithAuth(`http://${SERVER_IP}:4000/next_image/${gameState.roomCode}`);
+      const response = await fetch(`http://${SERVER_IP}:4000/next_image/${gameState.roomCode}`);
       const data = await response.json();
 
       if (data.status === "game_over") {
@@ -235,9 +209,7 @@ const handleNextRound = async () => {
 
   const callViaSocket = async (action: string, data: any) => {
     try {
-      const NGROK_URL = 'https://iconoclastic-erich-distillable.ngrok-free.dev'; 
-    
-      const response = await fetch(`${NGROK_URL}/proxy`, {
+      const response = await fetch('http://localhost:4001/proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action, ...data })
@@ -295,7 +267,7 @@ useEffect(() => {
           
           // מושכים תמונה רק אם אנחנו צריכים לעבור ל-Captioning
           if (gameState.phase !== GamePhase.CAPTIONING || isStartingNextRound) {
-            const response = await fetchWithAuth(`http://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`);
+            const response = await fetch(`http://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`);
             const imageData = await response.json();
 
             if (imageData.image) {

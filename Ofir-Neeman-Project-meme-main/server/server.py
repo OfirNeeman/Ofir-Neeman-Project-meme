@@ -12,17 +12,12 @@ import base64
 import os
 from dotenv import load_dotenv
 from pathlib import Path
-import jwt
-import datetime
-from functools import wraps
-from cryptography.fernet import Fernet
 
 # הגדרת הנתיב המדויק לקובץ ה-env שלך
 # אם הקובץ בתיקיית server ושמו server.env:
-env_path = Path('.env')
+env_path = Path('server') / 'server.env' 
 load_dotenv(dotenv_path=env_path)
-FERNET_KEY = os.getenv("FERNET_KEY")
-fernet = Fernet(FERNET_KEY)
+
 GIPHY_API_KEY = os.getenv("GIPHY_API_KEY")
 room_image_index = {}
 PORT = 4000
@@ -32,30 +27,6 @@ print(f"Checking API Key: {GIPHY_API_KEY}")
 # הגדרות TCP
 TCP_IP = '0.0.0.0'
 TCP_PORT = 5001
-
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your_fallback_secret_key")
-def get_decrypted_image(file_path):
-    with open(file_path, "rb") as f:
-        encrypted_content = f.read()
-    return fernet.decrypt(encrypted_content)
-
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        if not token:
-            return jsonify({'message': 'Token is missing!'}), 401
-        try:
-            # הסרת המילה Bearer אם היא קיימת
-            if "Bearer " in token:
-                token = token.split(" ")[1]
-            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-            # כאן אפשר להוסיף ל-kwargs את ה-room_code או ה-player_id מהטוקן
-        except Exception as e:
-            return jsonify({'message': 'Token is invalid!', 'error': str(e)}), 401
-        return f(*args, **kwargs)
-    return decorated
-
 
 def handle_tcp_client(conn, addr):
     try:
@@ -82,32 +53,15 @@ def start_tcp_server():
 
 # הפעלה ב-Thread נפרד כדי ש-Flask ימשיך לעבוד
 threading.Thread(target=start_tcp_server, daemon=True).start()
+
+# טעינת הגדרות
+
+
 app = Flask(__name__)
-@app.after_request
-def add_cors_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization,ngrok-skip-browser-warning'
-    response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
-    return response
+CORS(app) # מאפשר ל-React לתקשר עם השרת בלי חסימות דפדפן
 
 MY_CATEGORIES = ['actions', 'vine', 'bright', 'emotions', 'the office', 'breaking bad', 'dance moms', 'brooklyn 99', 'כאן 11']
-@app.route('/login-room', methods=['POST'])
-def login_room():
-    auth_data = request.json
-    room_code = auth_data.get('roomCode')
-    player_id = auth_data.get('playerId')
-    
-    if not room_code or not player_id:
-        return jsonify({"message": "Missing details"}), 400
 
-    # יצירת טוקן שתקף ל-24 שעות
-    token = jwt.encode({
-        'room_code': room_code,
-        'player_id': player_id,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
-    }, SECRET_KEY, algorithm="HS256")
-
-    return jsonify({'token': token})
 def init_uploads_dir():
     if not os.path.exists(UPLOADS_DIR):
         os.makedirs(UPLOADS_DIR)
@@ -126,14 +80,10 @@ def fetch_gifs_for_room(target_dir, limit=3):
             res = requests.get(url).json()
             gif_url = res['data']['images']['fixed_height']['url']
             filename = os.path.join(target_dir, f"giphy_{i}.gif")
-            gif_data = requests.get(gif_url).content
-            encrypted_gif = fernet.encrypt(gif_data)
-            filename = os.path.join(target_dir, f"giphy_{i}.gif")
-            with open(filename, "wb") as f:
-                f.write(encrypted_gif)
-                print(f"[V] Downloaded and ENCRYPTED GIF for: {chosen_tag}")
+            urllib.request.urlretrieve(gif_url, filename)
+            print(f"[V] Downloaded GIF for category: {chosen_tag}")
         except Exception as e:
-                print(f"[!] Error: {e}")
+            print(f"[!] Error fetching GIF: {e}")
 
 # --- נתיב 1: יצירת תיקייה למשחק חדש ---
 @app.route('/create-room-dir', methods=['POST'])
@@ -158,7 +108,6 @@ def create_room_dir():
 
 # --- נתיב 2: העלאת תמונה מהטלפון לתיקייה של החדר ---
 @app.route('/upload/<room_code>', methods=['POST'])
-@token_required
 def upload_file(room_code):
     room_path = os.path.join(UPLOADS_DIR, room_code)
     
@@ -168,20 +117,18 @@ def upload_file(room_code):
 
     if not request.data:
         return "No data", 400
-    
-    encrypted_data = fernet.encrypt(request.data)
+
     # שמירת הקובץ עם שם ייחודי
     filename = f"user_{random.randint(1000, 9999)}.jpg"
     file_path = os.path.join(room_path, filename)
     
     with open(file_path, "wb") as f:
-        f.write(encrypted_data)
+        f.write(request.data)
     
     print(f"[V] Image saved to room {room_code}: {filename}")
     return jsonify({"status": "success", "path": file_path}), 200
 
 @app.route('/image_base64/<room_code>', methods=['GET'])
-@token_required
 def get_image_base64(room_code):
     room_path = os.path.join(UPLOADS_DIR, room_code)
 
@@ -198,13 +145,15 @@ def get_image_base64(room_code):
         key=os.path.getctime
     )
 
-    decrypted_content = get_decrypted_image(latest_file)
-    encoded = base64.b64encode(decrypted_content).decode("utf-8")
-    
-    return jsonify({"status": "success", "image": encoded})
+    with open(latest_file, "rb") as img:
+        encoded = base64.b64encode(img.read()).decode("utf-8")
+
+    return jsonify({
+        "status": "success",
+        "image": encoded
+    })
 
 @app.route('/next_image/<room_code>', methods=['GET'])
-@token_required
 def get_next_image(room_code):
     room_folder = os.path.join(UPLOADS_DIR, room_code)
     if not os.path.exists(room_folder):
@@ -230,22 +179,23 @@ def get_next_image(room_code):
 
     image_name = images[current_index]
     image_path = os.path.join(room_folder, image_name)
+
+    # עדכון האינדקס לסיבוב הבא
     room_image_index[room_code] = current_index + 1
 
     try:
-            # שימוש בפונקציית הפענוח שכבר כתבת
-            decrypted_string = get_decrypted_image(image_path)
-            encoded_string = base64.b64encode(decrypted_string).decode('utf-8')
-            
-            return jsonify({
-                "image": encoded_string,
-                "image_name": image_name,
-                "current_round": current_index + 1,
-                "total_images": len(images)
-            })
+        with open(image_path, "rb") as img_file:
+            encoded_string = base64.b64encode(img_file.read()).decode('utf-8')
+        
+        return jsonify({
+            "image": encoded_string,
+            "image_name": image_name,
+            "current_round": current_index + 1,
+            "total_images": len(images)
+        })
     except Exception as e:
-            return jsonify({"error": str(e), "image": None}), 500
-    
+        return jsonify({"error": str(e), "image": None}), 500
+
 if __name__ == "__main__":
     init_uploads_dir()
     # הרצת השרת - הפקודה הזו חייבת להיות אחרונה!
