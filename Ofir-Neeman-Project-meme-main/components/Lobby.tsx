@@ -112,7 +112,7 @@ const handleJoinGame = async () => {
     const docSnap = await getDoc(roomRef);
     
     if (!docSnap.exists()) {
-      alert("חדר לא נמצא!");
+      alert("Room not found!");
       return;
     }
 
@@ -124,7 +124,7 @@ const handleJoinGame = async () => {
     );
 
     if (isNameTaken) {
-      alert("השם הזה כבר תפוס בחדר, בחר שם אחר!");
+      alert("The name is already taken in the room, please choose a different name!");
       return;
     }
 
@@ -140,7 +140,7 @@ const handleJoinGame = async () => {
     setJoined(true);
   } catch (e) {
     console.error(e);
-    alert("שגיאה בחיבור לחדר");
+    alert("Error joining the room. Please check the code and try again.");
   }
 };
 
@@ -153,7 +153,7 @@ const handleStart = async () => {
     // העברת roomCode כארגומנט רביעי
     onStartGame(players, personality, true, roomCode);
   } else {
-    alert(`צריך לפחות ${MIN_PLAYERS} שחקנים כדי להתחיל!`);
+    alert(`Need at least ${MIN_PLAYERS} players to start!`);
   }
 };
 
@@ -188,7 +188,7 @@ const handleStart = async () => {
             </div>
             <div>
               <h2 className="text-2xl md:text-3xl font-black text-white">HOST GAME</h2>
-              <p className="text-pink-200 text-sm md:text-base opacity-80">צור חדר והקרן על המסך</p>
+              <p className="text-pink-200 text-sm md:text-base opacity-80">Host a new game and invite your friends</p>
             </div>
           </div>
 
@@ -201,7 +201,7 @@ const handleStart = async () => {
             </div>
             <div>
               <h2 className="text-2xl md:text-3xl font-black text-white">JOIN GAME</h2>
-              <p className="text-pink-200 text-sm md:text-base opacity-80">הצטרף מהטלפון שלך</p>
+              <p className="text-pink-200 text-sm md:text-base opacity-80">Join an existing game</p>
             </div>
           </div>
         </div>
@@ -215,11 +215,11 @@ if (mode === 'JOIN' || mode === 'WAITING') {
       <div className="glass-panel p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl w-full text-center space-y-6 md:space-y-8 border-2 border-white/10">
         {!joined ? (
           <>
-            <h2 className="text-3xl md:text-4xl font-black text-white italic">מוכנים?</h2>
+            <h2 className="text-3xl md:text-4xl font-black text-white italic">?Ready to join</h2>
             <div className="space-y-4 md:space-y-6">
               <input 
                 type="text" 
-                placeholder="קוד חדר" 
+                placeholder="Room Code" 
                 value={inputCode} 
                 onChange={(e) => setInputCode(e.target.value.toUpperCase())} 
                 className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-4 py-4 md:py-5 text-center text-3xl font-black uppercase text-white focus:border-pink-500 outline-none transition-colors" 
@@ -228,7 +228,7 @@ if (mode === 'JOIN' || mode === 'WAITING') {
               <div className="relative">
                 <input 
                   type="text" 
-                  placeholder="כינוי" 
+                  placeholder="Nickname" 
                   value={playerName} 
                   onChange={handleNameChange} 
                   className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-4 py-4 md:py-5 text-center text-xl md:text-2xl font-bold text-white focus:border-pink-500 outline-none transition-colors" 
@@ -239,14 +239,14 @@ if (mode === 'JOIN' || mode === 'WAITING') {
               </div>
             </div>
             <Button onClick={handleJoinGame} disabled={!inputCode || !playerName} size="xl" className="w-full py-6 text-xl shadow-lg shadow-pink-500/20">
-              כניסה למשחק
+              Join Game
             </Button>
           </>
         ) : (
           <div className="space-y-6 py-8">
             <div className="text-7xl md:text-8xl animate-bounce">🤘</div>
-            <h2 className="text-3xl md:text-4xl font-black text-white italic">נרשמת בהצלחה!</h2>
-            <p className="text-pink-200 text-lg">עכשיו רק נשאר לחכות שהמארח ילחץ על START</p>
+            <h2 className="text-3xl md:text-4xl font-black text-white italic">!Successfully Joined</h2>
+            <p className="text-pink-200 text-lg">Now you just need to wait for the host to press START</p>
             <div className="flex gap-2 justify-center pt-4">
               <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
               <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
@@ -257,7 +257,7 @@ if (mode === 'JOIN' || mode === 'WAITING') {
       </div>
       {!joined && (
         <button onClick={() => setMode('MENU')} className="mt-8 text-zinc-500 hover:text-white font-bold text-sm uppercase tracking-widest p-4">
-           ← חזרה לתפריט
+           ← Back to Menu
         </button>
       )}
     </div>
@@ -271,7 +271,7 @@ if (mode === 'JOIN' || mode === 'WAITING') {
       </div>
       <div className="flex flex-col md:flex-row w-full gap-10">
         <div className="flex-1 glass-panel rounded-[2rem] p-8 border border-white/10">
-          <h2 className="text-3xl font-black text-white mb-8">שחקנים ({players.length})</h2>
+          <h2 className="text-3xl font-black text-white mb-8">Players ({players.length})</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {players.map((p) => (
               <div key={p.id} className="bg-zinc-800 p-3 rounded-2xl flex items-center gap-3">
@@ -282,10 +282,10 @@ if (mode === 'JOIN' || mode === 'WAITING') {
           </div>
         </div>
         <div className="w-full md:w-96 space-y-6">
-          <Button onClick={handleStart} size="xl" className="w-full" disabled={players.length < MIN_PLAYERS}>העלו תמונות</Button>
+          <Button onClick={handleStart} size="xl" className="w-full" disabled={players.length < MIN_PLAYERS}>start</Button>
           <div className="text-center pt-2">
             <button onClick={() => setMode('MENU')} className="text-zinc-500 hover:text-white font-bold text-sm uppercase tracking-widest transition-colors">
-               ביטול ויציאה
+               Cancel and Exit
             </button>
           </div>
         </div>

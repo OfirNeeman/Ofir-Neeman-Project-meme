@@ -375,7 +375,7 @@ return (
               <span className="font-black text-2xl text-transparent bg-clip-text bg-gradient-to-r from-white to-pink-200 tracking-tight">MEMEMASTER</span>
               <div className="hidden md:flex items-center gap-3">
                 <span className="bg-zinc-800 border border-zinc-700 px-4 py-1.5 rounded-full text-sm text-zinc-300 font-bold">
-                  סיבוב {gameState.roundsPlayed + 1}
+                  Round {gameState.roundsPlayed + 1}
                 </span>
                 {gameState.roomCode && (
                    <span className="bg-pink-500/20 border border-pink-500/30 px-4 py-1.5 rounded-full text-sm text-pink-200 font-bold">
@@ -419,9 +419,9 @@ return (
               ) : (
                 <div className="text-center">
                   <h1 className="text-6xl font-bold text-white">
-                    {gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || "שחקן"}
+                    {gameState.players.find(p => p.id === gameState.currentPlayerId)?.name || "Player"} is uploading...
                   </h1>
-                  <p className="text-pink-200 mt-4 text-2xl font-bold">המארח מכין את הממים... ⏳</p>
+                  <p className="text-pink-200 mt-4 text-2xl font-bold"> The Host is making the memes...</p>
                 </div>
               )}
             </div>
@@ -439,7 +439,7 @@ return (
           gameState.isHost ? (
     /* מה שהמארח רואה בזמן שהאחרים כותבים */
             <div className="flex flex-col items-center justify-center space-y-8 animate-in fade-in">
-              <h2 className="text-3xl font-black text-white italic">השחקנים כותבים כרגע... 🔥</h2>
+              <h2 className="text-3xl font-black text-white italic"> captions are being written... 🔥</h2>
           <div className="relative flex flex-col items-center gap-6">
                   
                   {/* התמונה המרכזית - נקייה לחלוטין */}
@@ -459,7 +459,7 @@ return (
                       <span className="relative inline-flex rounded-full h-3 w-3 bg-pink-500"></span>
                     </div>
                     <span className="text-white text-xl font-black uppercase tracking-wider">
-                      ממתין לכיתובים...
+                      Waiting for captions
                     </span>
                     <span className="text-pink-300 text-xl font-bold">
                       ({gameState.submissions.length} / {gameState.players.length})
@@ -491,10 +491,10 @@ return (
               </div>
               <div className="space-y-4">
                 <h2 className="text-5xl font-black text-white italic tracking-tight">
-                  התוצאות על המסך! 🏆
+                  Results on the Screen! 🏆
                 </h2>
                 <p className="text-pink-200 text-xl font-bold opacity-80">
-                  הסתכלו על המסך הראשי כדי לראות מי ניצח בסיבוב...
+                  Take a look at the main screen to see who won the round...
                 </p>
               </div>
               <div className="flex gap-2 justify-center">

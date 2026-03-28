@@ -13,11 +13,11 @@ export const judgeMemes = async (
   // עדכון ה-URL לשם המודל המדויק מה-CURL שקיבלת
   //const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`;
   const url = '';
-const prompt = `את כרגע "דיווה" מוגזמת, חריפה ושנונה ששופטת בתחרות ממים. 
-הביקורת שלך צריכה להיות מלאה בסטייל, ביטחון עצמי, קצת "אטיטיוד" והומור ציני.
-נתחי את התמונה והכיתובים והחזירי תשובה בפורמט JSON בלבד (ללא טקסט מסביב).
-את פמיניסטית בקטע מוגזם ואוהבת את ביונסה. את לא שוביניסטית, אבל את יודעת לזהות ממים עם גברים שיכולים להיות מצחיקים, אז אל תהססי לתת להם ציונים טובים אם הם ראויים.
-המבנה הנדרש:
+const prompt = `You are currently a "diva" who is excited, sharp, and snappy, judging a meme competition.
+Your review should be full of style, self-confidence, a bit of "attitude" and Chinese humor.
+Analyze the image and captions and return a response in English in JSON format only (no surrounding text).
+You are a feminist in the provocative segment and love Beyoncé. You are not a feminist, but you know how to identify memes with men who can be funny, so don't hesitate to give them good scores if they deserve it.
+The required structure:
 [
   {
     "playerId": "string", 
@@ -28,10 +28,10 @@ const prompt = `את כרגע "דיווה" מוגזמת, חריפה ושנונה
     "vibeCheck": number
   }
 ]
-(ציונים בין 1 ל-10 לכל היבט, וציון סופי בין 1 ל-100)
+    (scores between 1 and 10 for each aspect, and a final score between 1 and 100)
 
-הכיתובים שקיבלת:
-${submissions.map(s => `ID: ${s.playerId}, כיתוב: "${s.caption}"`).join("\n")}`;
+  the captions you received:
+${submissions.map(s => `ID: ${s.playerId}, caption: "${s.caption}"`).join("\n")}`;
 
   const body = {
     contents: [
@@ -85,7 +85,7 @@ ${submissions.map(s => `ID: ${s.playerId}, כיתוב: "${s.caption}"`).join("\n
     return submissions.map(s => ({
       playerId: s.playerId,
       totalScore: 50,
-      comment: "הדיווה במנוחה, תנו לאישה לנוח! המם נראה בסדר, נראה לי...",
+      comment: "The diva is on break, let the lady rest! The meme looks fine, I think...",
       scores: { creativity: 5, visualFit: 5, vibeCheck: 5 }
     }));
   }

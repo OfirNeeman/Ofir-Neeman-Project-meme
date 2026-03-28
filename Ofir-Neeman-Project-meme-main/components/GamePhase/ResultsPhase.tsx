@@ -46,7 +46,7 @@ export const ResultsPhase: React.FC<ResultsPhaseProps> =
   return (
     <div className="max-w-4xl mx-auto pb-32 pt-8">
       <h2 className="text-6xl font-black text-center mb-16 text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.5)]">
-        תוצאות השיפוט
+        Round Results
       </h2>
 
       <div className="grid gap-12">
@@ -75,7 +75,7 @@ export const ResultsPhase: React.FC<ResultsPhaseProps> =
                                 <Icons.Message className="w-8 h-8 text-white mx-auto" />
                              </div>
                              <p className="text-white text-3xl font-black uppercase tracking-tight drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] text-center break-words max-w-full px-4">
-                              {playerSubmission?.caption || "אין כיתוב"}</p>
+                              {playerSubmission?.caption || "No caption"}</p>
                              {/* In a real scenario we would map the caption here */}
                         </div>
                     </div>
@@ -132,7 +132,7 @@ export const ResultsPhase: React.FC<ResultsPhaseProps> =
         <div className="pointer-events-auto">
             {revealedCount < sortedResults.length - 1 ? (
             <Button onClick={handleRevealNext} size="xl" className="shadow-[0_10px_40px_rgba(0,0,0,0.5)] animate-bounce">
-                חשוף את הבא
+              Reveal Next
             </Button>
             ) : (
             <Button 
@@ -141,7 +141,7 @@ export const ResultsPhase: React.FC<ResultsPhaseProps> =
               variant="secondary" 
               className="shadow-[0_10px_40px_rgba(0,0,0,0.5)] bg-white text-zinc-900 hover:bg-zinc-200 border-zinc-400"
             >
-              {isLastRound ? "צפו במי ניצח 🏆" : "סיבוב חדש 🔄"}
+              {isLastRound ? "View Winner 🏆" : "Next Round 🔄"}
             </Button>
             )}
         </div>
