@@ -2,18 +2,27 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // חוקים עבור אוסף המשחקים
+    match /games/{roomCode} {
+      
+      // 1. מאפשר למצוא משחק לפי קוד (get) כדי לבדוק אם הוא קיים ולהשוות סיסמה
+      // אנחנו לא מאפשרים list (חיפוש כללי) כדי שאנשים לא יוכלו לסרוק את כל החדרים הפעילים
+      allow get: if true;
+      
+      // 2. יצירת משחק חדש (create)
+      allow create: if true;
+      
+      // 3. עדכון המשחק (update)
+      // מאפשר לשחקנים להצטרף (arrayUnion) ולמארח לעדכן סטטוסים
+      allow update: if true;
 
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Firestore database will be denied until you Update
-    // your rules
-    match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2026, 2, 13);
+      // 4. מניעת מחיקה של חדרים על ידי שחקנים אקראיים
+      allow delete: if false;
+
+      // חוק אופציונלי להגנה על שדה הסיסמה:
+      // ניתן להגדיר שבעדכון (update) אסור לשנות את שדה ה-password אחרי שהוא נוצר
+      // allow update: if request.resource.data.password == resource.data.password;
     }
   }
 }

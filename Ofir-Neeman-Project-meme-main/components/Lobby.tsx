@@ -5,6 +5,7 @@ import { Button } from './ui/Button';
 import { Icons } from './ui/Icons';
 import { db } from '../firebase'; 
 import { doc, setDoc, onSnapshot, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
+import bcrypt from 'bcryptjs';
 
 interface LobbyProps {
   onStartGame: (players: Player[], personality: JudgePersonality, isHost: boolean, roomCode: string, playerId?: string) => void;
@@ -87,6 +88,8 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
     setRoomCode(newCode);
     const generatedPassword = generateComplexPassword(6); 
     setRoomPassword(generatedPassword);
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(generatedPassword, salt);
     setMode('HOST');
     
     try {
@@ -97,7 +100,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
         personality: personality,
         createdAt: new Date(),
         roundsPlayed: 0,
-        password: generatedPassword,
+        password: hashedPassword,
         isHost: true
       });
 
@@ -134,8 +137,10 @@ const handleJoinGame = async () => {
     }
 
     const data = docSnap.data();
+    const isPasswordCorrect = bcrypt.compareSync(inputPassword, data.password);
+    console.log("האם הסיסמה שהוזנה תואמת ל-Hash?", isPasswordCorrect); // הדפסה לבדיקה
 
-    if (data.password && inputPassword !== data.password) {
+    if (data.password && !isPasswordCorrect) {
       alert("Incorrect password! Please try again.");
       return;
     }
