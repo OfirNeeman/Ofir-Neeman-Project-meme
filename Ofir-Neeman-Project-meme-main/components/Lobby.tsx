@@ -28,6 +28,15 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
     'bg-violet-500', 'bg-indigo-500', 'bg-blue-500', 'bg-cyan-500'
   ];
   const maxLength = 8;
+  const generateComplexPassword = (length: number) => {
+  // מאגר הכולל אותיות גדולות, קטנות ומספרים
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'; 
+  let password = '';
+  for (let i = 0; i < length; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+};
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const value = e.target.value;
@@ -75,7 +84,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
   const handleCreateGame = async () => {
     const newCode = generateRoomCode();
     setRoomCode(newCode);
-    const generatedPassword = Math.floor(1000 + Math.random() * 9000).toString(); 
+    const generatedPassword = generateComplexPassword(6); 
     setRoomPassword(generatedPassword);
     setMode('HOST');
     
@@ -289,12 +298,12 @@ if (mode === 'JOIN' || mode === 'WAITING') {
       <div className="bg-white text-zinc-950 px-16 py-6 rounded-full shadow-2xl border-4 border-pink-500 mb-16">
         <span className="text-xs font-black uppercase text-pink-600 mb-1 block text-center">Game PIN</span>
         <span className="text-7xl font-black tracking-widest font-mono">{roomCode}</span>
-      <div className="mt-2 pt-2 border-t border-zinc-200 flex items-center justify-center gap-2">
-        <Icons.Lock className="w-3 h-3 text-pink-500" />
-        <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
-          Password: <span className="text-pink-600 font-black">{roomPassword}</span>
-        </span>
-      </div>
+    <div className="mt-2 pt-2 border-t border-zinc-200 flex flex-col items-center">
+      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Room Password</span>
+      <span className="text-xl font-black text-pink-600 font-mono tracking-wider italic">
+        {roomPassword}
+      </span>
+    </div>
       </div>
       <div className="flex flex-col md:flex-row w-full gap-10">
         <div className="flex-1 glass-panel rounded-[2rem] p-8 border border-white/10">
