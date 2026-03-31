@@ -23,6 +23,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
   const [localPlayerId, setLocalPlayerId] = useState<string | null>(null);
   const [roomPassword, setRoomPassword] = useState<string>(''); // עבור המארח
   const [inputPassword, setInputPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState(false);
   const colors = [
     'bg-pink-500', 'bg-rose-500', 'bg-fuchsia-500', 'bg-purple-500', 
     'bg-violet-500', 'bg-indigo-500', 'bg-blue-500', 'bg-cyan-500'
@@ -248,13 +249,29 @@ if (mode === 'JOIN' || mode === 'WAITING') {
                 className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-4 py-4 md:py-5 text-center text-3xl font-black uppercase text-white focus:border-pink-500 outline-none transition-colors" 
                 maxLength={5} 
               />
-              <input 
-                type="password" 
-                placeholder="Password" 
-                value={inputPassword} 
-                onChange={(e) => setInputPassword(e.target.value)} 
-                className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-4 py-3 text-center text-xl font-bold text-white focus:border-pink-500 outline-none transition-colors" 
-              />
+              <div className="relative w-full">
+                <input 
+                  type={showPassword ? "text" : "password"} // משתנה לפי ה-State
+                  placeholder="Enter Password" 
+                  value={inputPassword} 
+                  onChange={(e) => setInputPassword(e.target.value)} 
+                  maxLength={6} 
+                  className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-4 py-4 text-center text-xl font-bold text-white focus:border-pink-500 outline-none transition-colors" 
+                />
+                
+                {/* כפתור העין */}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-pink-500 transition-colors"
+                >
+                  {showPassword ? (
+                    <Icons.EyeOff className="w-6 h-6" /> // אייקון עין עם קו (הסתרה)
+                  ) : (
+                    <Icons.Eye className="w-6 h-6" />    // אייקון עין (הצגה)
+                  )}
+                </button>
+              </div>
               <div className="relative">
                 <input 
                   type="text" 
