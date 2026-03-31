@@ -249,7 +249,7 @@ if (mode === 'JOIN' || mode === 'WAITING') {
                 maxLength={5} 
               />
               <input 
-                type="text" 
+                type="password" 
                 placeholder="Password" 
                 value={inputPassword} 
                 onChange={(e) => setInputPassword(e.target.value)} 
