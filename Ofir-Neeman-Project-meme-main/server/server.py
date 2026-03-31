@@ -12,12 +12,16 @@ import base64
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
+import base64
+import hashlib
 
 # הגדרת הנתיב המדויק לקובץ ה-env שלך
 # אם הקובץ בתיקיית server ושמו server.env:
 env_path = Path('server') / 'server.env' 
 load_dotenv(dotenv_path=env_path)
-
+SECRET_KEY = os.getenv("SECRET_KEY")
 GIPHY_API_KEY = os.getenv("GIPHY_API_KEY")
 room_image_index = {}
 PORT = 4000
@@ -27,6 +31,23 @@ print(f"Checking API Key: {GIPHY_API_KEY}")
 # הגדרות TCP
 TCP_IP = '0.0.0.0'
 TCP_PORT = 5001
+
+def decrypt_room_code(encrypted_code):
+    if not encrypted_code or len(encrypted_code) < 10: # הגנה מפני קודים קצרים מדי או לא מוצפנים
+        return encrypted_code 
+    try:
+        # יצירת מפתח באורך 32 בתים מתוך ה-SECRET_KEY
+        key = hashlib.sha256(SECRET_KEY.encode()).digest()
+        raw = base64.b64decode(encrypted_code)
+        
+        iv = raw[:16]
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        
+        decrypted = unpad(cipher.decrypt(raw[16:]), AES.block_size)
+        return decrypted.decode('utf-8')
+    except Exception as e:
+        # אם הפענוח נכשל, נניח שהקוד הגיע לא מוצפן ונחזיר אותו כמות שהוא
+        return encrypted_code
 
 def handle_tcp_client(conn, addr):
     try:
@@ -89,19 +110,21 @@ def fetch_gifs_for_room(target_dir, limit=3):
 @app.route('/create-room-dir', methods=['POST'])
 def create_room_dir():
     data = request.json
-    room_code = data.get('roomCode')
+    # כאן אנחנו מצפים לקוד מוצפן מה-React
+    encrypted_code = data.get('roomCode')
+    room_code = decrypt_room_code(encrypted_code)
     
     if not room_code:
-        return jsonify({"error": "No room code provided"}), 400
+        return jsonify({"error": "Invalid room code"}), 400
     
     room_path = os.path.join(UPLOADS_DIR, room_code)
-    room_image_index[room_code] = 0 # הוסף את זה בתוך create_room_dir
+    room_image_index[room_code] = 0 
+    
     try:
         if not os.path.exists(room_path):
             os.makedirs(room_path)
-            # כשנוצר חדר, אנחנו ישר מושכים לו כמה GIFs שיהיו מוכנים בתיקייה שלו
             fetch_gifs_for_room(room_path, 3)
-            return jsonify({"status": "success", "message": f"Room {room_code} created with GIFs"}), 201
+            return jsonify({"status": "success", "room": room_code}), 201
         return jsonify({"status": "exists"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -109,6 +132,7 @@ def create_room_dir():
 # --- נתיב 2: העלאת תמונה מהטלפון לתיקייה של החדר ---
 @app.route('/upload/<room_code>', methods=['POST'])
 def upload_file(room_code):
+    room_code = decrypt_room_code(room_code)
     room_path = os.path.join(UPLOADS_DIR, room_code)
     
     # וודוא שהתיקייה קיימת (למקרה שהבקשה הגיעה לפני ה-create)
@@ -130,6 +154,7 @@ def upload_file(room_code):
 
 @app.route('/image_base64/<room_code>', methods=['GET'])
 def get_image_base64(room_code):
+    room_code = decrypt_room_code(room_code)
     room_path = os.path.join(UPLOADS_DIR, room_code)
 
     if not os.path.exists(room_path):
@@ -155,6 +180,7 @@ def get_image_base64(room_code):
 
 @app.route('/next_image/<room_code>', methods=['GET'])
 def get_next_image(room_code):
+    room_code = decrypt_room_code(room_code)
     room_folder = os.path.join(UPLOADS_DIR, room_code)
     if not os.path.exists(room_folder):
         return jsonify({"error": "Room not found"}), 404

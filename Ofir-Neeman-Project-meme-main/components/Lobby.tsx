@@ -21,7 +21,8 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
   const [personality, setPersonality] = useState<JudgePersonality>(JudgePersonality.ROASTER);
   const [joined, setJoined] = useState(false);
   const [localPlayerId, setLocalPlayerId] = useState<string | null>(null);
-
+  const [roomPassword, setRoomPassword] = useState<string>(''); // עבור המארח
+  const [inputPassword, setInputPassword] = useState<string>('');
   const colors = [
     'bg-pink-500', 'bg-rose-500', 'bg-fuchsia-500', 'bg-purple-500', 
     'bg-violet-500', 'bg-indigo-500', 'bg-blue-500', 'bg-cyan-500'
@@ -74,6 +75,8 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
   const handleCreateGame = async () => {
     const newCode = generateRoomCode();
     setRoomCode(newCode);
+    const generatedPassword = Math.floor(1000 + Math.random() * 9000).toString(); 
+    setRoomPassword(generatedPassword);
     setMode('HOST');
     
     try {
@@ -84,6 +87,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
         personality: personality,
         createdAt: new Date(),
         roundsPlayed: 0,
+        password: generatedPassword,
         isHost: true
       });
 
@@ -103,7 +107,10 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
   };
 
 const handleJoinGame = async () => {
-  if (!inputCode || !playerName) return;
+  if (!inputCode || !playerName || !inputPassword) {
+    alert("Please fill in all fields");
+    return;
+  }
 
   const roomRef = doc(db, "games", inputCode.toUpperCase());
   
@@ -113,6 +120,13 @@ const handleJoinGame = async () => {
     
     if (!docSnap.exists()) {
       alert("Room not found!");
+      return;
+    }
+
+    const data = docSnap.data();
+
+    if (data.password && inputPassword !== data.password) {
+      alert("Incorrect password! Please try again.");
       return;
     }
 
@@ -225,6 +239,13 @@ if (mode === 'JOIN' || mode === 'WAITING') {
                 className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-4 py-4 md:py-5 text-center text-3xl font-black uppercase text-white focus:border-pink-500 outline-none transition-colors" 
                 maxLength={5} 
               />
+              <input 
+                type="text" 
+                placeholder="Password" 
+                value={inputPassword} 
+                onChange={(e) => setInputPassword(e.target.value)} 
+                className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-4 py-3 text-center text-xl font-bold text-white focus:border-pink-500 outline-none transition-colors" 
+              />
               <div className="relative">
                 <input 
                   type="text" 
@@ -238,7 +259,7 @@ if (mode === 'JOIN' || mode === 'WAITING') {
                 </span>
               </div>
             </div>
-            <Button onClick={handleJoinGame} disabled={!inputCode || !playerName} size="xl" className="w-full py-6 text-xl shadow-lg shadow-pink-500/20">
+            <Button onClick={handleJoinGame} disabled={!inputCode || !playerName || !inputPassword} size="xl" className="w-full py-6 text-xl shadow-lg shadow-pink-500/20">
               Join Game
             </Button>
           </>
@@ -268,6 +289,12 @@ if (mode === 'JOIN' || mode === 'WAITING') {
       <div className="bg-white text-zinc-950 px-16 py-6 rounded-full shadow-2xl border-4 border-pink-500 mb-16">
         <span className="text-xs font-black uppercase text-pink-600 mb-1 block text-center">Game PIN</span>
         <span className="text-7xl font-black tracking-widest font-mono">{roomCode}</span>
+      <div className="mt-2 pt-2 border-t border-zinc-200 flex items-center justify-center gap-2">
+        <Icons.Lock className="w-3 h-3 text-pink-500" />
+        <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
+          Password: <span className="text-pink-600 font-black">{roomPassword}</span>
+        </span>
+      </div>
       </div>
       <div className="flex flex-col md:flex-row w-full gap-10">
         <div className="flex-1 glass-panel rounded-[2rem] p-8 border border-white/10">
