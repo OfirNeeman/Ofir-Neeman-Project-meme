@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SERVER_IP } from '../../constants';
 
 interface UploadPhaseProps {
   onUploadComplete: (imageUrl: string) => void;
@@ -24,9 +25,7 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onS
     reader.onloadend = async () => {
       const base64String = reader.result as string;
       
-      try {
-        const SERVER_IP = "192.168.1.149"; // ודאי שזה ה-IP הנכון!
-        
+      try {        
         console.log("מתחיל שליחה לשרת...");
           // שינוי הנתיב ל-upload/ROOM_CODE
           await fetch(`http://${SERVER_IP}:4000/upload/${roomCode}`, {

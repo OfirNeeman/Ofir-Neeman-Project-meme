@@ -12,6 +12,7 @@ import { Icons } from './components/ui/Icons';
 import { db } from './firebase';
 import { doc, updateDoc, onSnapshot, arrayUnion,increment} from "firebase/firestore";
 import { WinnerPhase } from './components/GamePhase/WinnerPhase';
+import { SERVER_IP } from './constants';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -63,7 +64,6 @@ const App: React.FC = () => {
   const handleStartCaptioning = async () => {
     if (gameState.isHost && gameState.roomCode) {
       try {
-        const SERVER_IP = "192.168.1.149";
         await updateDoc(doc(db, "games", gameState.roomCode), {
           status: 'HOST_FINISHED_UPLOAD'
         });
@@ -127,9 +127,6 @@ const App: React.FC = () => {
 const handleNextRound = async () => {
   if (gameState.isHost && gameState.roomCode) {
     try {
-      const SERVER_IP = "192.168.1.149";
-      
-      // 1. משוך את התמונה הבאה מהשרת הפרטי
       const response = await fetch(`http://${SERVER_IP}:4000/next_image/${gameState.roomCode}`);
       const data = await response.json();
 
@@ -264,8 +261,6 @@ useEffect(() => {
 
       if (!gameState.isHost && (isStartingNextRound || isFirstUpload)) {
         try {
-          const SERVER_IP = "192.168.1.149";
-          
           // מושכים תמונה רק אם אנחנו צריכים לעבור ל-Captioning
           if (gameState.phase !== GamePhase.CAPTIONING || isStartingNextRound) {
             const response = await fetch(`http://${SERVER_IP}:4000/image_base64/${gameState.roomCode}`);

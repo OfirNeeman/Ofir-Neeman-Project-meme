@@ -6,6 +6,7 @@ import { Icons } from './ui/Icons';
 import { db } from '../firebase'; 
 import { doc, setDoc, onSnapshot, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
 import bcrypt from 'bcryptjs';
+import { SERVER_IP } from '../constants';
 
 interface LobbyProps {
   onStartGame: (players: Player[], personality: JudgePersonality, isHost: boolean, roomCode: string, playerId?: string) => void;
@@ -104,8 +105,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
         isHost: true
       });
 
-      // 2. השלב החדש: יצירת תיקייה בשרת הפייתון
-      const SERVER_IP = "192.168.1.149"; // וודא שזה ה-IP הנכון של המחשב שמריץ פייתון
+      // 2. השלב החדש: יצירת תיקייה בשרת הפייתון // וודא שזה ה-IP הנכון של המחשב שמריץ פייתון
       await fetch(`http://${SERVER_IP}:4000/create-room-dir`, {
         method: 'POST',
         headers: {
