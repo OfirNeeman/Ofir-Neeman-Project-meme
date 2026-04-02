@@ -16,6 +16,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 import base64
 import hashlib
+import bcrypt
 
 # הגדרת הנתיב המדויק לקובץ ה-env שלך
 # אם הקובץ בתיקיית server ושמו server.env:
@@ -31,6 +32,19 @@ print(f"Checking API Key: {GIPHY_API_KEY}")
 # הגדרות TCP
 TCP_IP = '0.0.0.0'
 TCP_PORT = 5001
+
+def hash_password(password, salt):
+    # ה-Pepper נלקח ממשתני הסביבה ולא נשמר ב-DB
+    pepper = os.getenv("SECRET_KEY") 
+    if not pepper:
+        raise ValueError("No SECRET_KEY found in environment variables!")
+        
+    combined = password + salt + pepper
+    return hashlib.sha256(combined.encode()).hexdigest()
+
+def verify_password(password, hashed):
+    pepper = SECRET_KEY.encode()
+    return bcrypt.checkpw(password.encode() + pepper, hashed.encode())
 
 def decrypt_room_code(encrypted_code):
     if not encrypted_code or len(encrypted_code) < 10: # הגנה מפני קודים קצרים מדי או לא מוצפנים
@@ -128,7 +142,36 @@ def create_room_dir():
         return jsonify({"status": "exists"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/hash-password', methods=['POST'])
+def hash_password_endpoint():
+    data = request.json
+    password = data.get('password')
+    if not password:
+        return jsonify({"error": "Missing password"}), 400
+    
+    salt = hashlib.sha256(os.urandom(32)).hexdigest()[:16]
+    hashed = hash_password(password, salt)
+    
+    return jsonify({"hash": f"{salt}:{hashed}"})
 
+@app.route('/verify-password', methods=['POST'])
+def verify_password_endpoint():
+    data = request.json
+    password = data.get('password')
+    stored = data.get('stored_hash')
+    
+    salt, original_hash = stored.split(":", 1)
+    new_hash = hash_password(password, salt)
+    
+    # ← כאן
+    print(f"stored: {stored}")
+    print(f"salt: {salt}")
+    print(f"new_hash: {new_hash}")
+    print(f"original_hash: {original_hash}")
+    print(f"match: {new_hash == original_hash}")
+    
+    return jsonify({"match": new_hash == original_hash})
 # --- נתיב 2: העלאת תמונה מהטלפון לתיקייה של החדר ---
 @app.route('/upload/<room_code>', methods=['POST'])
 def upload_file(room_code):

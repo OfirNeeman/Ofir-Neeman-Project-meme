@@ -89,8 +89,12 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
     setRoomCode(newCode);
     const generatedPassword = generateComplexPassword(6); 
     setRoomPassword(generatedPassword);
-    const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = bcrypt.hashSync(generatedPassword, salt);
+    const res = await fetch(`http://${SERVER_IP}:4000/hash-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: generatedPassword })
+    });
+    const { hash: hashedPassword } = await res.json();
     setMode('HOST');
     
     try {
@@ -104,6 +108,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onStartGame }) => {
         password: hashedPassword,
         isHost: true
       });
+      
 
       // 2. השלב החדש: יצירת תיקייה בשרת הפייתון // וודא שזה ה-IP הנכון של המחשב שמריץ פייתון
       await fetch(`http://${SERVER_IP}:4000/create-room-dir`, {
@@ -137,11 +142,15 @@ const handleJoinGame = async () => {
     }
 
     const data = docSnap.data();
-    const isPasswordCorrect = bcrypt.compareSync(inputPassword, data.password);
-    console.log("האם הסיסמה שהוזנה תואמת ל-Hash?", isPasswordCorrect); // הדפסה לבדיקה
+    const verifyRes = await fetch(`http://${SERVER_IP}:4000/verify-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: inputPassword, stored_hash: data.password })
+    });
+    const { match } = await verifyRes.json();
 
-    if (data.password && !isPasswordCorrect) {
-      alert("Incorrect password! Please try again.");
+    if (data.password && !match) {
+      alert("Incorrect password!");
       return;
     }
 
