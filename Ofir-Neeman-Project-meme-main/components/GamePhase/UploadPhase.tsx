@@ -70,18 +70,18 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onS
       </div>
 
 
-      <h2 className="text-3xl font-black mb-6 text-white italic">
-        {isHost ? "Waiting for others" : "!Upload your image"}
+      <h2 className="outfit-medium text-3xl font-black mb-6 text-white italic">
+        {isHost ? "Waiting for others" : "Upload your image!"}
       </h2>
 
       {isHost ? (
         <div className="text-center space-y-6">
-          <p className="text-zinc-400 font-medium">?All players have uploaded their images. Ready to start</p>
+          <p className="outfit-light text-zinc-400 font-medium text-lg">Want to make memes out of your images? Upload them now!</p>
           <button 
             onClick={onStartGame} // חיבור הלחיצה למעבר השלב
             className="group relative px-8 py-4 bg-white text-black font-black rounded-full hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
           >
-            <span className="relative z-10">First Round</span>
+            <span className="outfit-medium relative z-10">First Round</span>
             <span className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur"></span>
           </button>
         </div>
@@ -92,7 +92,7 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onS
               ? 'bg-green-500 text-white scale-95' 
               : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-pink-500/20'
           }`}>
-            <span className="relative z-10 flex items-center gap-3">
+            <span className="outfit-medium relative z-10 flex items-center gap-3">
               {isProcessing ? "Uploading..." : 
                uploadStatus === 'success' ? "Success!" : "Choose Image"}
             </span>
@@ -114,8 +114,8 @@ const UploadPhase: React.FC<UploadPhaseProps> = ({ onUploadComplete, isHost, onS
           )}
         </div> /* כאן היה התיקון של ה-div הסוגר */
       )}
-      <div className="mt-4 text-xs text-gray-400">
-        pic is being uploaded to the server, not stored locally. If you refresh, the image will be lost and you will need to upload again.
+      <div className="outfit-light mt-4 text-base text-gray-400 text-center text-lg">
+        Upload pics to the server and wait for the host to start the game. Make sure you are connected to the same Wi-Fi network as the host.
       </div>
     </div>
   );

@@ -212,7 +212,7 @@ const handleStart = async () => {
           <h1 className="relative text-5xl md:text-8xl font-black text-white drop-shadow-2xl transform -rotate-2 leading-none">
             MEME<span className="text-pink-500">MASTER</span>
           </h1>
-          <p className="text-xl md:text-3xl text-pink-200 font-bold tracking-widest mt-4 uppercase">AI Party Game</p>
+          <p className="text-xl md:text-3xl text-pink-200 font-bold tracking-widest mt-4 uppercase">Meme Party Game</p>
         </div>
 
         {/* Grid שהופך לטור אחד במובייל (grid-cols-1) ושני טורים במחשב (md:grid-cols-2) */}
@@ -225,8 +225,8 @@ const handleStart = async () => {
               <Icons.Brain className="w-8 h-8 md:w-12 md:h-12 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl md:text-3xl font-black text-white">HOST GAME</h2>
-              <p className="text-pink-200 text-sm md:text-base opacity-80">Host a new game and invite your friends</p>
+              <h2 className="outfit-bold text-5xl text-white">HOST GAME</h2>
+              <p className="outfit-medium text-pink-200 text-lg md:text-2xl opacity-80">Invite your friends to join</p>
             </div>
           </div>
 
@@ -238,8 +238,8 @@ const handleStart = async () => {
               <Icons.User className="w-8 h-8 md:w-12 md:h-12 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl md:text-3xl font-black text-white">JOIN GAME</h2>
-              <p className="text-pink-200 text-sm md:text-base opacity-80">Join an existing game</p>
+              <h2 className="outfit-bold text-5xl text-white">JOIN GAME</h2>
+              <p className="outfit-medium text-pink-200 text-lg md:text-2xl opacity-80">Join an existing game</p>
             </div>
           </div>
         </div>
@@ -253,14 +253,14 @@ if (mode === 'JOIN' || mode === 'WAITING') {
       <div className="glass-panel p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl w-full text-center space-y-6 md:space-y-8 border-2 border-white/10">
         {!joined ? (
           <>
-            <h2 className="text-3xl md:text-4xl font-black text-white italic">?Ready to join</h2>
+            <h2 className="outfit-bold text-3xl md:text-4xl font-black text-white italic">Ready to join?</h2>
             <div className="space-y-4 md:space-y-6">
               <input 
                 type="text" 
                 placeholder="Room Code" 
                 value={inputCode} 
                 onChange={(e) => setInputCode(e.target.value.toUpperCase())} 
-                className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-4 py-4 md:py-5 text-center text-3xl font-black uppercase text-white focus:border-pink-500 outline-none transition-colors" 
+                className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-4 py-4 md:py-5 text-center text-xl md:text-2xl font-bold text-white focus:border-pink-500 outline-none transition-colors" 
                 maxLength={5} 
               />
               <div className="relative w-full">
@@ -270,7 +270,7 @@ if (mode === 'JOIN' || mode === 'WAITING') {
                   value={inputPassword} 
                   onChange={(e) => setInputPassword(e.target.value)} 
                   maxLength={6} 
-                  className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-4 py-4 text-center text-xl font-bold text-white focus:border-pink-500 outline-none transition-colors" 
+                  className="w-full bg-zinc-950/50 border-2 border-zinc-700 rounded-2xl px-4 py-4 md:py-5 text-center text-xl md:text-2xl font-bold text-white focus:border-pink-500 outline-none transition-colors" 
                 />
                 
                 {/* כפתור העין */}
@@ -306,8 +306,8 @@ if (mode === 'JOIN' || mode === 'WAITING') {
         ) : (
           <div className="space-y-6 py-8">
             <div className="text-7xl md:text-8xl animate-bounce">🤘</div>
-            <h2 className="text-3xl md:text-4xl font-black text-white italic">Successfully Joined</h2>
-            <p className="text-pink-200 text-lg">Now you just need to wait for the host to press START</p>
+            <h2 className="outfit-medium text-3xl md:text-4xl font-black text-white italic">Successfully Joined</h2>
+            <p className="outfit-medium text-pink-200 text-lg">Now you just need to wait for the host to press START</p>
             <div className="flex gap-2 justify-center pt-4">
               <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
               <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
@@ -327,29 +327,29 @@ if (mode === 'JOIN' || mode === 'WAITING') {
   return (
     <div className="max-w-6xl mx-auto p-4 flex flex-col items-center relative z-10">
       <div className="bg-white text-zinc-950 px-16 py-6 rounded-full shadow-2xl border-4 border-pink-500 mb-16">
-        <span className="text-xs font-black uppercase text-pink-600 mb-1 block text-center">Game PIN</span>
-        <span className="text-7xl font-black tracking-widest font-mono">{roomCode}</span>
+        <span className="outfit-medium text-xs font-black uppercase text-pink-600 mb-1 block text-center">Game PIN</span>
+        <span className="outfit-bold text-7xl font-black tracking-widest font-mono">{roomCode}</span>
     <div className="mt-2 pt-2 border-t border-zinc-200 flex flex-col items-center">
       <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Room Password</span>
-      <span className="text-xl font-black text-pink-600 font-mono tracking-wider italic">
+      <span className="outfit-bold text-xl font-black text-pink-600 font-mono tracking-wider italic">
         {roomPassword}
       </span>
     </div>
       </div>
       <div className="flex flex-col md:flex-row w-full gap-10">
         <div className="flex-1 glass-panel rounded-[2rem] p-8 border border-white/10">
-          <h2 className="text-3xl font-black text-white mb-8">Players ({players.length})</h2>
+          <h2 className="outfit-bold text-3xl font-black text-white mb-8">Players ({players.length})</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {players.map((p) => (
               <div key={p.id} className="bg-zinc-800 p-3 rounded-2xl flex items-center gap-3">
                 <div className={`p-2 rounded-xl ${p.avatar}`}><Icons.User className="w-5 h-5 text-white" /></div>
-                <span className="font-bold text-white truncate">{p.name}</span>
+                <span className="outfit-medium font-bold text-white truncate">{p.name}</span>
               </div>
             ))}
           </div>
         </div>
         <div className="w-full md:w-96 space-y-6">
-          <Button onClick={handleStart} size="xl" className="w-full" disabled={players.length < MIN_PLAYERS}>start</Button>
+          <Button onClick={handleStart} size="xl" className="w-full" disabled={players.length < MIN_PLAYERS}>START</Button>
           <div className="text-center pt-2">
             <button onClick={() => setMode('MENU')} className="text-zinc-500 hover:text-white font-bold text-sm uppercase tracking-widest transition-colors">
                Cancel and Exit

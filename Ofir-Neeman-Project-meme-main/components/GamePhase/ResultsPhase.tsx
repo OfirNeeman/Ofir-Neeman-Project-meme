@@ -45,7 +45,7 @@ export const ResultsPhase: React.FC<ResultsPhaseProps> =
 
   return (
     <div className="max-w-4xl mx-auto pb-32 pt-8">
-      <h2 className="text-6xl font-black text-center mb-16 text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.5)]">
+      <h2 className="outfit-bold text-6xl font-black text-center mb-16 text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.5)]">
         Round Results
       </h2>
 

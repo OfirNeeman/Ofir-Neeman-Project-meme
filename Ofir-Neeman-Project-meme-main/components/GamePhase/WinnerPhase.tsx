@@ -23,8 +23,8 @@ export const WinnerPhase: React.FC<WinnerPhaseProps> = ({
 
 const renderHostView = () => (
     <div className="max-w-5xl mx-auto text-center pt-12 pb-24 px-4">
-      <h1 className="text-5xl font-black text-white mb-16 tracking-tighter">
-        {winners.length > 1 ? "🤝 IT'S A TIE" : "🏆 THE WINNER"}
+      <h1 className="outfit-bold text-5xl font-black text-white mb-16 tracking-tighter">
+        {winners.length > 1 ? " IT'S A TIE" : " THE WINNER"}
       </h1>
 
       <div className="flex flex-wrap justify-center gap-6 mb-20">
@@ -36,8 +36,8 @@ const renderHostView = () => (
               <div className={`p-4 rounded-full ${player.avatar || 'bg-white/5'} mb-4 border border-white/10`}>
                 <Icons.User className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-black text-white">{player.name}</h2>
-              <p className="text-pink-400 font-bold text-xl">{player.score} pts</p>
+              <h2 className="outfit-bold text-2xl font-black text-white">{player.name}</h2>
+              <p className="outfit-bold text-pink-400 font-bold text-xl">{player.score} pts</p>
             </div>
           </div>
         ))}
@@ -50,10 +50,10 @@ const renderHostView = () => (
             {others.map((p, i) => (
               <div key={p.id} className="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
                 <div className="flex items-center gap-3">
-                  <span className="text-white/40 font-mono text-sm">{winners.length + i + 1}</span>
-                  <span className="text-white font-bold">{p.name}</span>
+                  <span className="outfit-medium text-white/40 font-mono text-sm">{winners.length + i + 1}</span>
+                  <span className="outfit-bold text-white font-bold">{p.name}</span>
                 </div>
-                <span className="text-white/60 text-sm">{p.score} pts</span>
+                <span className="outfit-medium text-white/60 text-sm">{p.score} pts</span>
               </div>
             ))}
           </div>
@@ -62,7 +62,7 @@ const renderHostView = () => (
 
       <Button 
         onClick={onRestart} 
-        className="bg-white text-black hover:bg-pink-500 hover:text-white px-12 py-6 rounded-full font-black transition-all"
+        className="outfit-bold bg-white text-black hover:bg-pink-500 hover:text-white px-12 py-6 rounded-full font-black transition-all"
       >
         PLAY AGAIN
       </Button>
@@ -93,7 +93,7 @@ const renderHostView = () => (
           </div>
         </div>
 
-        <div className="space-y-4 mb-8">
+        <div className="outfit-bold space-y-4 mb-8">
           <h1 className="text-4xl font-black text-white italic">
             {isWinner ? "You won" : "Nice try"}
           </h1>

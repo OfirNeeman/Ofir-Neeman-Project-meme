@@ -8,9 +8,6 @@ from dotenv import load_dotenv
 import socket
 import threading
 import json
-import base64
-import os
-from dotenv import load_dotenv
 from pathlib import Path
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad

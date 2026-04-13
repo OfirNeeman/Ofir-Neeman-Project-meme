@@ -434,7 +434,7 @@ return (
           gameState.isHost ? (
     /* מה שהמארח רואה בזמן שהאחרים כותבים */
             <div className="flex flex-col items-center justify-center space-y-8 animate-in fade-in">
-              <h2 className="text-3xl font-black text-white italic"> captions are being written</h2>
+              <h2 className="outfit-bold text-3xl font-black text-white italic"> Captions are being written</h2>
           <div className="relative flex flex-col items-center gap-6">
                   
                   {/* התמונה המרכזית - נקייה לחלוטין */}
@@ -485,11 +485,11 @@ return (
                 <Icons.Trophy className="w-24 h-24 text-yellow-400 relative z-10 mx-auto" />
               </div>
               <div className="space-y-4">
-                <h2 className="text-5xl font-black text-white italic tracking-tight">
-                  !Results on the Screen
+                <h2 className="outfit-bold text-5xl font-black text-white italic tracking-tight">
+                  Results on the Screen!
                 </h2>
-                <p className="text-pink-200 text-xl font-bold opacity-80">
-                  ...Take a look at the main screen to see who won the round
+                <p className="outfit-medium text-pink-200 text-xl font-bold opacity-80">
+                  Take a look at the main screen to see who won the round...
                 </p>
               </div>
               <div className="flex gap-2 justify-center">
