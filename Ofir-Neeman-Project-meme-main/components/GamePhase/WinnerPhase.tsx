@@ -2,24 +2,28 @@ import React from "react";
 import { Player } from "../../types";
 import { Icons } from "../ui/Icons";
 import { Button } from "../ui/Button";
+import { SERVER_IP } from '../../constants';
 
 interface WinnerPhaseProps {
   players: Player[];
   isHost: boolean;
   currentPlayerId: string | null;
   onRestart: () => void;
+  roomCode: string;
 }
 
 export const WinnerPhase: React.FC<WinnerPhaseProps> = ({ 
   players, 
   isHost, 
   currentPlayerId, 
+  roomCode,
   onRestart 
 }) => {
   const sorted = [...players].sort((a, b) => b.score - a.score);
   const highScore = sorted[0]?.score || 0;
   const winners = sorted.filter(p => p.score === highScore && highScore > 0);
   const others = sorted.filter(p => p.score !== highScore);
+
 
 const renderHostView = () => (
     <div className="max-w-5xl mx-auto text-center pt-12 pb-24 px-4">
@@ -61,10 +65,18 @@ const renderHostView = () => (
       )}
 
       <Button 
-        onClick={onRestart} 
+        onClick={() => {
+          // קריאה למחיקת התיקייה בשרת הפייתון
+          // אנחנו לא מחכים ל-await כדי לא לעכב את המעבר ללובי ב-UI
+        fetch(`http://${SERVER_IP}:4000/delete-room-dir/${roomCode}`, { 
+            method: 'POST' 
+          }).catch(err => console.error("Cleanup failed:", err));
+
+          onRestart();
+        }} 
         className="outfit-bold bg-white text-black hover:bg-pink-500 hover:text-white px-12 py-6 rounded-full font-black transition-all"
       >
-        PLAY AGAIN
+        Back to Lobby
       </Button>
     </div>
   );

@@ -14,6 +14,7 @@ from Crypto.Util.Padding import unpad
 import base64
 import hashlib
 import bcrypt
+import shutil
 
 # הגדרת הנתיב המדויק לקובץ ה-env שלך
 # אם הקובץ בתיקיית server ושמו server.env:
@@ -83,6 +84,23 @@ def start_tcp_server():
         conn, addr = server.accept()
         threading.Thread(target=handle_tcp_client, args=(conn, addr)).start()
 
+def delete_room_folder(room_code):
+    room_folder = os.path.join(UPLOADS_DIR, room_code)
+    
+    print(f"[*] Attempting to delete: {room_folder}") # בדיקה להדפסה
+    
+    try:
+        if os.path.exists(room_folder):
+            shutil.rmtree(room_folder)
+            print(f"[X] Successfully deleted folder: {room_folder}")
+        else:
+            print(f"[!] Folder not found: {room_folder}")
+        
+        if room_code in room_image_index:
+            del room_image_index[room_code]
+    except Exception as e:
+        print(f"[!] Error during deletion: {e}")
+
 # הפעלה ב-Thread נפרד כדי ש-Flask ימשיך לעבוד
 threading.Thread(target=start_tcp_server, daemon=True).start()
 
@@ -93,11 +111,6 @@ app = Flask(__name__)
 CORS(app) # מאפשר ל-React לתקשר עם השרת בלי חסימות דפדפן
 
 MY_CATEGORIES = ['actions', 'vine', 'bright', 'emotions', 'the office', 'breaking bad', 'dance moms', 'brooklyn 99', 'כאן 11']
-
-def init_uploads_dir():
-    if not os.path.exists(UPLOADS_DIR):
-        os.makedirs(UPLOADS_DIR)
-    print(f"[*] Folder {UPLOADS_DIR} is ready.")
 
 def fetch_gifs_for_room(target_dir, limit=3):
     """מושך GIFs מ-Giphy ושומר אותם בתיקייה ספציפית"""
@@ -262,7 +275,13 @@ def get_next_image(room_code):
     except Exception as e:
         return jsonify({"error": str(e), "image": None}), 500
 
+@app.route('/delete-room-dir/<room_code>', methods=['POST', 'DELETE'])
+def handle_delete_room(room_code):
+    room_code = decrypt_room_code(room_code)
+    # שימוש בפונקציית העזר שכבר כתבנו
+    delete_room_folder(room_code)
+    return jsonify({"status": "success", "message": f"Room {room_code} cleaned up"}), 200
+
 if __name__ == "__main__":
-    init_uploads_dir()
     # הרצת השרת - הפקודה הזו חייבת להיות אחרונה!
     app.run(host='0.0.0.0', port=PORT, debug=True)
