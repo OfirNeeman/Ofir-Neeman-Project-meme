@@ -9,8 +9,8 @@ export const judgeMemes = async (
 ): Promise<AIJudgmentResult[]> => {
   
   const cleanData = imageBase64.split(",")[1] || imageBase64;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`;
-  //const url = '';
+  //const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`;
+  const url = '';
 const prompt = `You are currently a "diva" who is excited, sharp, and snappy, judging a meme competition.
 Your review should be full of style, self-confidence, a bit of "attitude" and Chinese humor.
 Analyze the image and captions and return a response in Hebrew in JSON format only (no surrounding text). Make sure that the text is appropriate for all audiences, and avoid any offensive language. The JSON should be an array of objects, each containing the playerId, a totalScore (between 1 and 100), a comment, and individual scores for creativity, visual fit, and vibe check (each between 1 and 10). The totalScore should reflect the overall quality of the meme, while the individual scores should provide insight into specific aspects of the meme. Be sure to provide constructive feedback in your comments to help players improve their memes in future rounds.

@@ -15,6 +15,8 @@ import base64
 import hashlib
 import bcrypt
 import shutil
+import struct
+
 
 # הגדרת הנתיב המדויק לקובץ ה-env שלך
 # אם הקובץ בתיקיית server ושמו server.env:
@@ -61,18 +63,41 @@ def decrypt_room_code(encrypted_code):
         # אם הפענוח נכשל, נניח שהקוד הגיע לא מוצפן ונחזיר אותו כמות שהוא
         return encrypted_code
 
+import struct # נדרש כדי להפוך מספר לבתים בפורמט קבוע
+
 def handle_tcp_client(conn, addr):
     try:
-        data = conn.recv(4096)
+        # 1. קריאת אורך ההודעה (4 בתים ראשונים)
+        raw_msglen = recvall(conn, 4)
+        if not raw_msglen:
+            return
+        msglen = struct.unpack('>I', raw_msglen)[0] # הפיכת הבתים למספר שלם
+
+        # 2. קריאת תוכן ההודעה לפי האורך שקיבלנו
+        data = recvall(conn, msglen)
         if data:
             message = json.loads(data.decode('utf-8'))
             print(f"Received TCP: {message}")
-            response = {"status": "ok", "action": message.get("action")}
-            conn.sendall(json.dumps(response).encode('utf-8'))
+            
+            # הכנת תשובה
+            response = json.dumps({"status": "ok", "action": message.get("action")}).encode('utf-8')
+            # שליחת אורך התשובה ואז התשובה עצמה
+            conn.sendall(struct.pack('>I', len(response)) + response)
+            
     except Exception as e:
         print(f"TCP Error: {e}")
     finally:
-        conn.close() # חשוב לסגור את החיבור בכל פעם
+        conn.close()
+
+def recvall(sock, n):
+    """פונקציית עזר להבטחת קבלת כל הבתים המבוקשים"""
+    data = bytearray()
+    while len(data) < n:
+        packet = sock.recv(n - len(data))
+        if not packet:
+            return None
+        data.extend(packet)
+    return data
 
 def start_tcp_server():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
