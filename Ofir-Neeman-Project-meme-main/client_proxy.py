@@ -6,6 +6,8 @@ import json
 import struct
 import json
 
+from server.server import OPCODE_CREATE_ROOM
+
     
 app = Flask(__name__)
 CORS(app)
@@ -15,25 +17,25 @@ SERVER_PORT = 5001
 
 import struct
 
-def send_tcp_message(payload):
-    """פונקציה שפותחת סוקט TCP עם פרוטוקול אורך-תוכן"""
+def send_tcp_custom_protocol(opcode, payload):
+    """שליחת הודעה עם OpCode כחלק מפרוטוקול מותאם"""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((SERVER_IP, SERVER_PORT))
         
-        # הפיכת ה-JSON לבתים
-        message = json.dumps(payload).encode('utf-8')
-        # אריזה: 4 בתים של אורך + תוכן ההודעה
-        msg = struct.pack('>I', len(message)) + message
-        s.sendall(msg)
+        message_bytes = json.dumps(payload).encode('utf-8')
         
-        # קבלת תשובה מהשרת לפי אותו פרוטוקול
-        raw_msglen = recvall(s, 4)
-        if not raw_msglen:
-            return {"error": "no response"}
-        msglen = struct.unpack('>I', raw_msglen)[0]
+        # אריזת ה-Header: אורך ההודעה + קוד הפעולה
+        header = struct.pack('>IH', len(message_bytes), opcode)
+        s.sendall(header + message_bytes)
         
-        data = recvall(s, msglen)
-        return json.loads(data.decode('utf-8'))
+        # קבלת תשובה לפי אותו פורמט
+        raw_header = recvall(s, 6)
+        if not raw_header:
+            return {"error": "protocol mismatch"}
+            
+        res_len, res_opcode = struct.unpack('>IH', raw_header)
+        res_data = recvall(s, res_len)
+        return json.loads(res_data.decode('utf-8'))
 
 def recvall(sock, n):
     # (אותה פונקציית עזר מהשרת)
@@ -46,11 +48,18 @@ def recvall(sock, n):
 
 @app.route('/proxy', methods=['POST'])
 def proxy():
-    # ה-React שולח לכאן בקשה
     data = request.json
-    # המתווך מעביר אותה ב-TCP לשרת הראשי
-    response = send_tcp_message(data)
-    return jsonify(response)
+    
+    # שליחה עם השם החדש וקביעת OpCode ברירת מחדל (למשל 101)
+    # את יכולה להוסיף לוגיקה שקובעת את ה-opcode לפי התוכן של data
+    opcode = data.get('opcode', 101) 
+    
+    try:
+        # עדכון השורה שגרמה לשגיאה:
+        response = send_tcp_custom_protocol(opcode, data)
+        return jsonify(response)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(port=4001) # ה-React ידבר עם פורט 4001

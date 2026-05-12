@@ -17,6 +17,10 @@ import bcrypt
 import shutil
 import struct
 
+# הגדרת OpCodes כחלק מהפרוטוקול המותאם
+OPCODE_CREATE_ROOM = 101
+OPCODE_DELETE_ROOM = 102
+OPCODE_ENCRYPT_DATA = 201
 
 # הגדרת הנתיב המדויק לקובץ ה-env שלך
 # אם הקובץ בתיקיית server ושמו server.env:
@@ -63,29 +67,44 @@ def decrypt_room_code(encrypted_code):
         # אם הפענוח נכשל, נניח שהקוד הגיע לא מוצפן ונחזיר אותו כמות שהוא
         return encrypted_code
 
-import struct # נדרש כדי להפוך מספר לבתים בפורמט קבוע
 
 def handle_tcp_client(conn, addr):
     try:
-        # 1. קריאת אורך ההודעה (4 בתים ראשונים)
-        raw_msglen = recvall(conn, 4)
-        if not raw_msglen:
+        # 1. קריאת Header קבוע (6 בתים: 4 לאורך + 2 לסוג הפעולה)
+        raw_header = recvall(conn, 6)
+        if not raw_header:
             return
-        msglen = struct.unpack('>I', raw_msglen)[0] # הפיכת הבתים למספר שלם
+        
+        # פירוק ה-Header: I (unsigned int, 4 bytes), H (unsigned short, 2 bytes)
+        msglen, opcode = struct.unpack('>IH', raw_header)
 
-        # 2. קריאת תוכן ההודעה לפי האורך שקיבלנו
+        # 2. קריאת ה-Payload (תוכן ההודעה)
         data = recvall(conn, msglen)
         if data:
             message = json.loads(data.decode('utf-8'))
-            print(f"Received TCP: {message}")
+            print(f"Received OpCode {opcode}: {message}")
             
-            # הכנת תשובה
-            response = json.dumps({"status": "ok", "action": message.get("action")}).encode('utf-8')
-            # שליחת אורך התשובה ואז התשובה עצמה
-            conn.sendall(struct.pack('>I', len(response)) + response)
+            response_payload = {}
+
+            # 3. מכונת מצבים (State Machine) של הפרוטוקול
+            if opcode == OPCODE_CREATE_ROOM:
+                # לוגיקה ליצירת חדר
+                response_payload = {"status": "room_created", "details": "success"}
+            elif opcode == OPCODE_DELETE_ROOM:
+                # לוגיקה למחיקה
+                room_code = message.get("roomCode")
+                delete_room_folder(room_code) # שימוש בפונקציה הקיימת
+                response_payload = {"status": "deleted", "room": room_code}
+            else:
+                response_payload = {"status": "unknown_opcode"}
+
+            # 4. שליחת תשובה במבנה הפרוטוקול (Header + Payload)
+            resp_bytes = json.dumps(response_payload).encode('utf-8')
+            header = struct.pack('>IH', len(resp_bytes), opcode)
+            conn.sendall(header + resp_bytes)
             
     except Exception as e:
-        print(f"TCP Error: {e}")
+        print(f"TCP Protocol Error: {e}")
     finally:
         conn.close()
 
