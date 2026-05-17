@@ -1,8 +1,12 @@
 import React from 'react';
 
+// הגדרת ה-Props שהכפתור מסוגל לקבל, תוך הרחבת תכונות הכפתור הסטנדרטיות של HTML
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  /** סגנון חזותי של הכפתור - ברירת מחדל: 'primary' */
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  /** גודל הריפוד והפונט של הכפתור - ברירת מחדל: 'md' */
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  /** האם הכפתור נמצא כרגע בתהליך תקשורת/טעינה מול השרת */
   isLoading?: boolean;
 }
 
@@ -12,10 +16,13 @@ export const Button: React.FC<ButtonProps> = ({
   size = 'md', 
   className = '', 
   isLoading = false,
-  ...props 
+  ...props  // אוסף את כל שאר ה-Props (כמו onClick, type, title) ומעביר אותם הלאה
 }) => {
+  
+  // סגנונות הבסיס המשותפים לכל סוגי הכפתורים (מיקום, פונט עבה, אפקט לחיצה תלת-ממדי)
   const baseStyles = "inline-flex items-center justify-center font-black transition-all transform focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-1 active:border-b-0";
   
+  // מילון עיצובים (Variants) מבוסס Tailwind CSS
   const variants = {
     primary: "bg-pink-500 hover:bg-pink-400 text-white border-b-4 border-pink-700 rounded-full shadow-lg shadow-pink-900/40",
     secondary: "bg-zinc-800 hover:bg-zinc-700 text-pink-100 border-b-4 border-zinc-950 rounded-full",
@@ -23,6 +30,7 @@ export const Button: React.FC<ButtonProps> = ({
     ghost: "bg-transparent hover:bg-white/5 text-pink-200 border-none rounded-xl",
   };
 
+  // מילון גדלים (Sizes) שקובע את גודל הטקסט והמרווחים הפנימיים
   const sizes = {
     sm: "px-4 py-2 text-sm border-b-2",
     md: "px-6 py-3 text-base",
@@ -32,19 +40,25 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <button 
+      // שרשור חכם של כל מחלקות ה-CSS יחד עם ה-className החיצוני שמתקבל מהקומפוננטה האם
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      // חסימת הכפתור במידה והוא במצב טעינה או שהוגדר כ-disabled חיצונית
       disabled={isLoading || props.disabled}
       {...props}
     >
       {isLoading ? (
+        // הצגת Spinner אנימטיבי וטקסט בזמן טעינה
         <span className="flex items-center gap-2">
           <svg className="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          טוען...
+          Loading...
         </span>
-      ) : children}
+      ) : (
+        // אם אין טעינה, מציג את התוכן המקורי שהוכנס לכפתור (טקסט או אייקון)
+        children
+      )}
     </button>
   );
 };
