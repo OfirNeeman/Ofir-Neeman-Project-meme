@@ -320,37 +320,61 @@ def upload_file(room_code):
     print(f"[V] Image saved to room {room_code}: {filename}")
     return jsonify({"status": "success", "path": file_path}), 200
 
+@app.route('/image_base64/<room_code>', methods=['GET'])
+def get_image_base64(room_code):
+    room_code = decrypt_room_code(room_code)
+    room_path = os.path.join(UPLOADS_DIR, room_code)
+
+    if not os.path.exists(room_path):
+        return jsonify({"error": "Room not found"}), 404
+
+    files = os.listdir(room_path)
+
+    if not files:
+        return jsonify({"error": "No images"}), 404
+
+    latest_file = max(
+        [os.path.join(room_path, f) for f in files],
+        key=os.path.getctime
+    )
+
+    with open(latest_file, "rb") as img:
+        encoded = base64.b64encode(img.read()).decode("utf-8")
+
+    return jsonify({
+        "status": "success",
+        "image": encoded
+    })
+
 @app.route('/next_image/<room_code>', methods=['GET'])
 def get_next_image(room_code):
-    """
-    מנהל את שלבי המשחק ומחזיר בכל קריאה את התמונה הבאה בתור (במבנה סדור).
-    במידה ונגמרו התמונות, מחזיר סטטוס game_over.
-    """
     room_code = decrypt_room_code(room_code)
     room_folder = os.path.join(UPLOADS_DIR, room_code)
     if not os.path.exists(room_folder):
         return jsonify({"error": "Room not found"}), 404
 
-    # סינון קבצים ומיון אלפביתי כדי להבטיח סדר קבוע
+    # סינון קבצים - מוודא שרק תמונות נכנסות לרשימה
     images = sorted([f for f in os.listdir(room_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))])
     
     if not images:
-        return jsonify({"error": "No images in folder", "image": None}), 404
+        return jsonify({"error": "No images in folder", "image": None}), 404 # הוספת image: None
 
+    # שליפת האינדקס הנוכחי
     current_index = room_image_index.get(room_code, 0)
     
-    # בדיקה האם הגענו לסוף רשימת התמונות (המשחק נגמר)
+    # בדיקה אם נגמרו התמונות
     if current_index >= len(images):
+        # מחזירים תשובה מפורשת שאין יותר תמונה
         return jsonify({
             "status": "game_over",
-            "image": None,
+            "image": None, # חשוב עבור ה-if (data.image) ב-React
             "message": "No more images"
         }), 200
 
     image_name = images[current_index]
     image_path = os.path.join(room_folder, image_name)
 
-    # קידום האינדקס ב-1 עבור הסיבוב הבא
+    # עדכון האינדקס לסיבוב הבא
     room_image_index[room_code] = current_index + 1
 
     try:
@@ -365,6 +389,7 @@ def get_next_image(room_code):
         })
     except Exception as e:
         return jsonify({"error": str(e), "image": None}), 500
+
 
 
 @app.route('/delete-room-dir/<room_code>', methods=['POST', 'DELETE'])
